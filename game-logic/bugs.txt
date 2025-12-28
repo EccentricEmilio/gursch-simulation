@@ -1,0 +1,5 @@
+Engine and state duplication: process_turn uses engine attributes (self.current_round / self.round_is_over) but other code expects those on GameState. Use self.state.current_round and self.state.round_is_over instead.
+Wrong "starting player" in validation: validate_player_input uses the current active player index instead of the round's starting player (should use self.state.starting_player_index).
+determine_starting_index can crash when rank not found or hand empty — use get(..., -1) and guard empty hands.
+process_turn assumes starting_player_index exists and prints directly (I/O belongs to UI). Validate starting_player_index and remove prints.
+Missing turn increment after a finished turn (increment state.turn_index).
