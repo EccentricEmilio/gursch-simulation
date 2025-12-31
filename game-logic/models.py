@@ -1,7 +1,9 @@
 import random
 from state import GameState
 
+
 class Move:
+    
     pass
 
 class RandomPolicy:
@@ -9,5 +11,4 @@ class RandomPolicy:
         pass
     
     def return_move(self, state: GameState, player, legal_moves):
-        
-        return move
+        return 

@@ -1,6 +1,13 @@
 import pydealer 
 from constants import *
 
+class Card:
+    def __init__(self, value: str, suit: str):
+        self.value = value
+        self.int_value = POKER_VALUES[self.value]
+        self.suit = suit
+        self.abbrev = self.value + self.suit
+
 class GameState:
     def __init__(self, settings: dict = {}):
         self.settings = NORMAL_SETTINGS
@@ -13,8 +20,10 @@ class GameState:
         self.board = []
         self.phase = 0 # 0 = SwitchPhase, 1 = PlayPhase, 2 = GameIsOver
         self.current_round = {}
+        
         self.deck = pydealer.Deck() 
         self.deck.shuffle()
+        
         self.loser_score = -1
         self.ties = []
 
@@ -23,11 +32,21 @@ class GameState:
         self.starting_player_index = None
         self.active_player_index = None
 
+    def return_cards(self, amount: int) -> list:
+        if len(self.deck) < amount:
+            raise ValueError
+        card_stack = self.deck.deal(amount)
+        new_card_stack = [Card(VALUE_MAP[c.value], c.suit[0]) for c in card_stack.cards]
+        return new_card_stack
+    
     def deal_initial_hands(self):
-        for hand in self.players_hands.values():
-            card_stack = self.deck.deal(self.TOTAL_CARDS_PER_HAND)
-            hand.extend(c.abbreviate() for c in card_stack)
+        self.players_hands = {p: self.return_cards(self.TOTAL_CARDS_PER_HAND) for p in self.players}
             
     def debug_set_hands(self, hands: dict):
         for player, hand in hands.items():
             self.players_hands[player] = hand
+            
+#boi = GameState()
+#boi.deal_initial_hands()
+#for p, h in boi.players_hands.items():
+#    print(p, [c.value for c in h])

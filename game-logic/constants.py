@@ -31,13 +31,18 @@ POKER_VALUES = {
 }
 
 ERROR_MESSAGES = {
-            "no_cards": "No cards chosen.",
-            "invalid_card": "Invalid card chosen.",
-            "duplicate_cards": "Duplicate cards chosen.",
-            "different_values": "All chosen cards must be of the same value.",
-            "mismatched_count": "You must play the same number of cards as player-1.",
-            "disallowed_value": "Value must either be your lowest available or match starting_player."
-        }
+    "MoveErrors": {
+        "NoCards": "No cards chosen.",
+        "InvalidCard": "Invalid card chosen.",
+        "DuplicateCards": "Duplicate cards chosen.",
+        "DifferentValues": "All chosen cards must be of the same value.",
+        "MismatchedCount": "You must play the same number of cards as player-1.",
+        "DisallowedValue": "Value must either be your lowest available or match starting_player."
+    },
+    "LogicErrors" : {
+        "InsufficientCards" : "No cards left in deck"
+    }
+}
 
 NORMAL_SETTINGS = {
     "cards_per_hand": 5,

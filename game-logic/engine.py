@@ -4,6 +4,21 @@ from state import GameState
 class GameEngine:
     def __init__(self, state: GameState):
         self.state = state
+        
+    def run(self):
+        # Run game?
+        pass
+
+    def swap_hand(self, player):
+        # Swap all five, only allowed once at the beginning of the game
+        new_cards = self.state.return_cards(5)
+        self.state.players_hands[player] = new_cards
+        return
+
+    def swap_cards(self, amount, player):
+        # Swap X amount of cards
+        new_cards = self.state.return_cards(amount)
+        self.state.players_hands[player] = new_cards
 
     def process_turn(self, prompt_player: callable):
         self.state.current_round = {}
@@ -46,24 +61,24 @@ class GameEngine:
             
         hand = [c.upper() for c in self.show_hand(player)]
         if len(chosen_cards) == 0:
-            return False, ERROR_MESSAGES["no_cards"]
+            return False, ERROR_MESSAGES["NoCards"]
         if any(c not in hand for c in chosen_cards):
-            return False, ERROR_MESSAGES["invalid_card"]
+            return False, ERROR_MESSAGES["InvalidCard"]
         if len(chosen_cards) != len(set(chosen_cards)):
-            return False, ERROR_MESSAGES["duplicate_cards"]
+            return False, ERROR_MESSAGES["DuplicateCards"]
         if not currently_starter:
             if len(chosen_cards) != len(self.state.current_round[starting_player]):
-                return False, ERROR_MESSAGES["mismatched_count"]
+                return False, ERROR_MESSAGES["MismatchedCount"]
         
         values = [POKER_VALUES[c[0]] for c in chosen_cards]
         if currently_starter:
             if len(set(values)) != 1:
-                return False, ERROR_MESSAGES["different_values"]
+                return False, ERROR_MESSAGES["DifferentValues"]
         if not currently_starter:
             starting_values = [POKER_VALUES[c[0]] for c in starting_players_cards]
-            if NORMAL_SETTINGS["response_requires_duplicates"]:
+            if NORMAL_SETTINGS["ResponseRequiresDuplicates"]:
                 if values.count(values[0]) < starting_values.count(starting_values[0]):
-                    return False, ERROR_MESSAGES["different_values"]
+                    return False, ERROR_MESSAGES["DifferentValues"]
                 
         # If all checks pass, now check that value is allowed
         # compared to starting player's cards
@@ -76,7 +91,7 @@ class GameEngine:
             count = len(chosen_cards)
             for v in values:
                 if value_to_match > v and v > min(player_hand_values):
-                    return False, ERROR_MESSAGES["disallowed_value"]
+                    return False, ERROR_MESSAGES["DisallowedValue"]
                 if count != 1:
                     count -= 1
                     del player_hand_values[0]
