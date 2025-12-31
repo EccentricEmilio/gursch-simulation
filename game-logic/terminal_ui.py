@@ -25,7 +25,7 @@ class TerminalUI:
             message.append(card)
         print(" ".join(message))
 
-    def prompt_player(self, player: str, hand: list, validate_player_input: callable):
+    def prompt_player(self, player: str, hand: list, validate_player_input: function):
             print("It's " + player + "'s turn.")
             self.print_hand("This is your hand:", hand)
             chosen_cards = input("Choose which cards to play: ")
@@ -43,11 +43,11 @@ class TerminalUI:
         print("The starting player is:", player)
     
     def print_loser(self, loser_score: tuple, ties):
-        if ties == None:
+        if ties == []:
             loser = loser_score[0]
             score = loser_score[1]
             print("Game is over")
             print(loser + " lost, with a score of " + str(score))
-        elif ties != None:
+        elif ties != []:
             print("It's a tie!")
             print("These players tied: " + str(ties))

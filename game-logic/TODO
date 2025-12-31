@@ -1,0 +1,50 @@
+COMPLETE GameEngine
+- Add first phase
+- Add mini gursch, in some 
+- Add handling for sevens
+
+
+
+
+1. Pure GameEngine (done / almost)
+2. Legal move generator
+3. Rule-based AI
+4. Large-scale simulation
+5. Data collection
+6. Simple RL (tabular)
+7. (Later) function approximation / neural nets
+
+
+Implement engine.legal_moves(state, player)
+
+Write 2–3 rule-based policies
+
+Run 10k–100k simulations and log stats
+
+
+Policy rules:
+
+Takes (state, player, legal_moves)
+Returns one move
+Stateless (except ML memory)
+
+Required policies:
+
+RandomPolicy
+LowestLegalPolicy
+GreedyPolicy
+HumanPolicy
+
+Engine responsibilities
+
+Generate legal moves
+Apply moves
+Advance game state
+
+AI training path
+
+Rule-based policies
+Self-play simulations
+Data collection
+Tabular RL
+(Later) Neural nets

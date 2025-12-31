@@ -7,17 +7,13 @@ class GameEngine:
 
     def process_turn(self, prompt_player: callable):
         self.state.current_round = {}
-        self.state.round_is_over = False
         
         last_player_index = self.state.starting_player_index - 1
         if last_player_index < 0:
             last_player_index = len(self.state.players) - 1
         
         self.state.active_player_index = self.state.starting_player_index
-        while not self.state.round_is_over:
-            if self.state.active_player_index == last_player_index:
-                self.state.round_is_over = True
-            
+        while not self.state.active_player_index == last_player_index:
             active_player = self.state.players[self.state.active_player_index]
 
             chosen_cards = prompt_player(active_player, self.state.players_hands[active_player], self.validate_player_input)
@@ -65,7 +61,7 @@ class GameEngine:
                 return False, ERROR_MESSAGES["different_values"]
         if not currently_starter:
             starting_values = [POKER_VALUES[c[0]] for c in starting_players_cards]
-            if CUSTOM_RULES["response_requires_duplicates"]:
+            if NORMAL_SETTINGS["response_requires_duplicates"]:
                 if values.count(values[0]) < starting_values.count(starting_values[0]):
                     return False, ERROR_MESSAGES["different_values"]
                 

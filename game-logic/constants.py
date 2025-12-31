@@ -39,10 +39,9 @@ ERROR_MESSAGES = {
             "disallowed_value": "Value must either be your lowest available or match starting_player."
         }
 
-CUSTOM_RULES = {
+NORMAL_SETTINGS = {
     "cards_per_hand": 5,
-    "deck_type": "standard",
-    "player_count": 2,
+    "player_count": 3,
     # If this is checked, responses must include duplicate cards or all cards must be the players
     # individual lowest cards. For example, if player-1 plays two Queens, player-2 must also play atleast
     # two Queens if they have them, otherwise they must play two of their lowest cards.
