@@ -1,3 +1,4 @@
+from state import Card
 class TerminalUI:
     def __init__(self):
         pass 
@@ -25,11 +26,12 @@ class TerminalUI:
             message.append(card)
         print(" ".join(message))
 
-    def prompt_player(self, player: str, hand: list, validate_player_input: function):
+    def prompt_player(self, player: str, hand: list, validate_player_input: callable):
             print("It's " + player + "'s turn.")
             self.print_hand("This is your hand:", hand)
             chosen_cards = input("Choose which cards to play: ")
             chosen_cards = chosen_cards.split()
+            chosen_cards = [Card(c[0].upper(), c[1].upper()) for c in chosen_cards]
 
             valid, err = validate_player_input(player, chosen_cards)
             if not valid:

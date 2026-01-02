@@ -1,9 +1,14 @@
 from constants import *
-from state import GameState
+from state import GameState, Card
+from models import HumanPolicy
+
   
 class GameEngine:
-    def __init__(self, state: GameState):
+    def __init__(self, state: GameState, policies: list):
         self.state = state
+        
+
+        self.players_policies = {p: policies[self.state.players.index(p)] for p in self.state.players}
         
     def run(self):
         # Run game?
@@ -19,10 +24,23 @@ class GameEngine:
         # Swap X amount of cards
         new_cards = self.state.return_cards(amount)
         self.state.players_hands[player] = new_cards
+    
+    def swap_phase(self):
+        return
 
-    def process_turn(self, prompt_player: callable):
+    def process_turn(self):
         self.state.current_round = {}
         
+        self.state.active_player_index = self.state.starting_player_index
+        for p, policy in self.players_policies.items():
+            moveset = self.generate_valid_moveset(self.state.players_hands[p], self.)
+            policy.return_move(self.state, p, self.generate_valid_moveset())
+
+            self.state.active_player_index += 1
+            if self.state.active_player_index >= len(self.state.players):
+                self.state.active_player_index = 0
+        
+        '''
         last_player_index = self.state.starting_player_index - 1
         if last_player_index < 0:
             last_player_index = len(self.state.players) - 1
@@ -32,8 +50,6 @@ class GameEngine:
             active_player = self.state.players[self.state.active_player_index]
 
             chosen_cards = prompt_player(active_player, self.state.players_hands[active_player], self.validate_player_input)
-            # Normalize
-            chosen_cards = [c.upper() for c in chosen_cards]
             self.state.current_round[active_player] = chosen_cards
             for card in chosen_cards:
                 self.state.players_hands[active_player].remove(card)
@@ -42,10 +58,20 @@ class GameEngine:
             self.state.active_player_index += 1
             if self.state.active_player_index >= len(self.state.players):
                 self.state.active_player_index = 0
+        '''
+
+    def generate_valid_moveset(self, hand: list, starting_values: list, start: bool):
+        # Currently only handles 1 card
+        moveset = []
+        if start:
+            moveset = hand
+        else:
+            for c in hand:
+                if c.int_value >= max(starting_values):
+                    moveset.append(c)
+        return moveset
 
     def validate_player_input(self, player, chosen_cards):
-        # normalize
-        chosen_cards = [c.upper() for c in chosen_cards]
         starting_player = self.state.players[self.state.starting_player_index]
         player_hand = self.state.players_hands[player]
         player_hand_values = sorted([POKER_VALUES[c[0]] for c in player_hand])
@@ -163,3 +189,14 @@ class GameEngine:
                     if s == highest_score:
                         loser = p
                 self.state.loser_score = (loser, highest_score)
+      
+'''          
+state = GameState({"player_count": 2})
+state.deal_initial_hands()
+policies = [HumanPolicy, HumanPolicy]
+boi = GameEngine(state, policies)
+
+BASJ = boi.generate_valid_moveset(state.players_hands["Abraham"], [7], False)
+print([c.abbrev for c in state.players_hands["Abraham"]])
+print([c.abbrev for c in BASJ])
+'''

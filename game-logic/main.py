@@ -11,9 +11,9 @@ def run_terminal_game():
     ui = TerminalUI()
 
     state.deal_initial_hands()
-    state.debug_set_hands(PLAYERS_HANDS_DEBUG)  # For testing purposes
-    engine.determine_starting_index()
+    #state.debug_set_hands(PLAYERS_HANDS_DEBUG)  # For testing purposes
     # Deck will contain duplicate cards if using debug hands
+    engine.determine_starting_index()
     ui.print_game_state(state.turn_index, state.players_hands, 
                         initial_setup=True, starting_player=state.players[state.starting_player_index])
     while not state.game_is_over:

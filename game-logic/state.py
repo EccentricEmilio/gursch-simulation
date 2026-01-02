@@ -7,6 +7,7 @@ class Card:
         self.int_value = POKER_VALUES[self.value]
         self.suit = suit
         self.abbrev = self.value + self.suit
+        
 
 class GameState:
     def __init__(self, settings: dict = {}):
