@@ -1,18 +1,12 @@
 import random
-from state import GameState
-
-# Chat told me to use this, cant see why though?
-class Move:
-    def __init__(self):
-        pass
+from state import GameState, Move
 
 class RandomPolicy:
     def __init__(self):
         pass
     
-    def return_move(self, state: GameState, player: str, legal_moves: list):
-        # Can only choose one card?
-        return random.choice(legal_moves)
+    def return_move(self, state: GameState, player: str, moveset: set) -> Move:
+        return random.choice(list(moveset))
 
 class HumanPolicy:
     def print_hand(self, prefix: str, hand: list):

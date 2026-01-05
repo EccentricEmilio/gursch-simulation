@@ -27,8 +27,11 @@ class Card:
 
 class Move:
     def __init__(self, cards: list):
-        self.cards = list(cards)
+        self.cards = tuple(cards)
     
+    def __getitem__(self, index ):
+        return self.cards[index]
+
     def __repr__(self):
         return f"Move({self.cards})"
 
@@ -48,7 +51,7 @@ class GameState:
         self.deck = pydealer.Deck() 
         self.deck.shuffle()
         
-        self.loser_score = -1
+        self.loser_score = ()
         self.ties = []
 
         self.players = PLAYER_NAMES[0:self.settings["player_count"]]
@@ -60,7 +63,7 @@ class GameState:
         if len(self.deck) < amount:
             raise ValueError
         card_stack = self.deck.deal(amount)
-        new_card_stack = [Card(VALUE_MAP[c.value], c.suit[0]) for c in card_stack.cards]
+        new_card_stack = [Card(VALUE_MAP[c.value], c.suit) for c in card_stack.cards]
         return new_card_stack
     
     def deal_initial_hands(self):

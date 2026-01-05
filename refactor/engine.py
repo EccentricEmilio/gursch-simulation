@@ -1,7 +1,7 @@
 from constants import *
-from state import GameState, Card
-from models import HumanPolicy
-
+from state import GameState, Card, Move
+from models import *
+from itertools import combinations
   
 class GameEngine:
     def __init__(self, state: GameState, policies: list):
@@ -28,47 +28,57 @@ class GameEngine:
     def swap_phase(self):
         return
 
+
+
     def process_turn(self):
         self.state.current_round = {}
         
         self.state.active_player_index = self.state.starting_player_index
+        active_player = self.state.players[self.state.active_player_index]
+
         for p, policy in self.players_policies.items():
-            moveset = self.generate_valid_moveset(self.state.players_hands[p], self.)
-            policy.return_move(self.state, p, self.generate_valid_moveset())
+            legal_moveset = self.legal_moveset(active_player)
+            print(legal_moveset)
+            move_played = policy.return_move(
+                self.state, 
+                p, 
+                legal_moveset
+            )
+            self.state.current_round[active_player] = move_played
 
-            self.state.active_player_index += 1
-            if self.state.active_player_index >= len(self.state.players):
-                self.state.active_player_index = 0
-        
-        '''
-        last_player_index = self.state.starting_player_index - 1
-        if last_player_index < 0:
-            last_player_index = len(self.state.players) - 1
-        
-        self.state.active_player_index = self.state.starting_player_index
-        while not self.state.active_player_index == last_player_index:
-            active_player = self.state.players[self.state.active_player_index]
-
-            chosen_cards = prompt_player(active_player, self.state.players_hands[active_player], self.validate_player_input)
-            self.state.current_round[active_player] = chosen_cards
-            for card in chosen_cards:
+            # remove cards
+            print("")
+            for card in move_played:
                 self.state.players_hands[active_player].remove(card)
 
-            # Shift active player
             self.state.active_player_index += 1
             if self.state.active_player_index >= len(self.state.players):
                 self.state.active_player_index = 0
+            active_player = self.state.players[self.state.active_player_index]
+
+    def legal_moveset(self, player: str):
+        moveset = set()
+        hand = self.state.players_hands[player]
+        # If it player in mention starts the round, special rules apply
+
+        '''
+        CHATGPT replecement for first if code block below
+        for value, group in groupby(sorted(hand, key=lambda c: c.value), key=lambda c: c.value):
+            group = list(group)
+            for r in range(1, len(group) + 1):
+                moveset.add(Move(group[:r]))
         '''
 
-    def generate_valid_moveset(self, hand: list, starting_values: list, start: bool):
-        # Currently only handles 1 card
-        moveset = []
-        if start:
-            moveset = hand
+        # Slim down logic for times sake?, maybe check for rules before creation.
+        if self.state.current_round == {}:
+            for r in range(1, len(hand) + 1):
+                for combo in combinations(hand, r):
+                    if combo.count(combo[0]) == r:
+                        moveset.add(Move(combo))
         else:
-            for c in hand:
-                if c.int_value >= max(starting_values):
-                    moveset.append(c)
+            for r in range(1, len(hand) + 1):
+                for combo in combinations(hand, r):
+                    moveset.add(Move(combo))
         return moveset
 
     def validate_player_input(self, player, chosen_cards):
@@ -134,24 +144,20 @@ class GameEngine:
         if self.state.turn_index == 0:
             for p in self.state.players:
                 hand = self.state.players_hands.get(p)
-                card = hand[-1]
-                value = card[0]
-                rank_value = POKER_VALUES.get(value)
+                int_value = hand[-1].int_value
 
-                if rank_value >= winner_value:
+                if int_value >= winner_value:
                     winner = p
-                    winner_value = rank_value
+                    winner_value = int_value
 
         # This block currently only handles the last card played in the round
         if self.state.turn_index > 0:
-            for player, cards in self.state.current_round.items():
-                card = cards[-1]
-                value = card[0]
-                rank_value = POKER_VALUES.get(value)
+            for player, Move in self.state.current_round.items():
+                int_value = Move[0].int_value
 
-                if rank_value >= winner_value:
+                if int_value >= winner_value:
                     winner = player
-                    winner_value = rank_value
+                    winner_value = int_value
         
         winner_index = self.state.players.index(winner)
         self.state.starting_player_index = winner_index
@@ -168,7 +174,7 @@ class GameEngine:
     
     def advance_state(self):
         if self.state.players_hands[self.state.players[0]] == []:
-            self.state.game_is_over = True
+            self.state.phase += 1
         
             player_scores = []
             for player, cards in self.state.current_round.items():
