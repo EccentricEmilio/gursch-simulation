@@ -10,7 +10,7 @@ class RandomPolicy:
     def __init__(self):
         pass
     
-    def return_move(self, state: GameState, player, legal_moves):
+    def return_move(self, state: GameState, player: str, legal_moves: list):
         # Can only choose one card?
         return random.choice(legal_moves)
 
