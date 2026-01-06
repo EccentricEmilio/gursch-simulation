@@ -2,6 +2,7 @@ from constants import *
 from state import GameState, Card, Move
 from models import *
 from itertools import combinations
+from itertools import groupby
   
 class GameEngine:
     def __init__(self, state: GameState, policies: list):
@@ -42,7 +43,7 @@ class GameEngine:
         for p in players_order:
             policy = self.players_policies[p]
 
-            legal_moveset = self.legal_moveset(p, starting_player)
+            legal_moveset = self.legal_moveset(p)
 
             move_played = policy.return_move(
                 self.state, 
@@ -60,26 +61,89 @@ class GameEngine:
                 self.state.active_player_index = 0
             active_player = self.state.players[self.state.active_player_index]
 
-    def legal_moveset(self, player: str, starting_player):
+    def is_legal_lead(self, move: Move) -> bool:
+        # Check is move contains only duplicates
+        values = {c.value for c in move.cards}
+        if len(values) != 1:
+            return False
+        # Move is legal
+        return True
+    
+    def is_legal_response(self, move: Move, lead_move: Move, player: str) -> bool:
+        lead_value = lead_move[0].int_value
+        
+        hand_sorted = sorted(
+            self.state.players_hands[player],
+            key=lambda c: c.int_value
+        )
+        move_values = [c.int_values for c in move.cards]
+        
+        low_cards = [v for v in move_values if v < lead_value]
+        low_count = len(low_cards)
+                
+        allowed_low_cards = hand_sorted[:low_count]
+        
+        for card in move.cards:
+            if card.int_value >= lead_value:
+                continue
+            if card.int_value in allowed_low_cards:
+                continue
+            return False
+        return True
+        
+        
+        
+        
+        
+        
+        #[10, 10]
+        
+        #hand [2, 3, 10, 10]
+        
+        #[2, 3]        
+        
+        min_value = lead_move[0].int_value
+        hand_values = [card.int_value for card in self.state.players_hands[player]]
+        for card in move:
+            if card.int_value < min_value and card.int_value != min(hand_values):
+                return False
+                
+        return True
+
+    def is_legal_move(self, player: str, move: Move) -> bool:
+        # 1. Player must own the cards
+        if not all(c in self.state.players_hands[player] for c in move.cards):
+            return False
+
+        # 2. First player rules
+        if not self.state.current_round:
+            return self.is_legal_lead(move)
+
+        # 3. Response rules
+        lead_move = list(self.state.current_round.values())[0]
+        return self.is_legal_response(move, lead_move, player) 
+
+    def legal_moveset(self, player: str):
         moveset = set()
         hand = self.state.players_hands[player]
-        # If it player in mention starts the round, special rules apply
+        for r in range(1, len(hand) + 1):
+            for combo in combinations(hand, r):
+                move = Move(combo)
+                if self.is_legal_move(player, move):
+                    moveset.add(move)
+
+        return moveset
+
 
         '''
-        CHATGPT replecement for first if code block below
-        for value, group in groupby(sorted(hand, key=lambda c: c.value), key=lambda c: c.value):
-            group = list(group)
-            for r in range(1, len(group) + 1):
-                moveset.add(Move(group[:r]))
-        '''
-
         # Slim down logic for times sake?, maybe check for rules before creation.
         if player == starting_player:
-            for r in range(1, len(hand) + 1):
-                for combo in combinations(hand, r):
-                    # VALIDATION LOGIC BELOW MAYBE MOVE!!!
-                    if combo.count(combo[0]) == r:
-                        moveset.add(Move(combo))
+            value_selector = lambda c: c.value
+            sorted_hand = sorted(hand, key=value_selector)
+            for value, group in groupby(sorted_hand, key=value_selector):
+                group = list(group)
+                for r in range(1, len(group) + 1):
+                    moveset.add(Move(group[:r]))
             print("Legal moveset for",player, moveset)
         else:
             move_size = len(self.state.current_round[starting_player])
@@ -87,7 +151,7 @@ class GameEngine:
             # move_size is entirerly validation logic
             for combo in combinations(hand, move_size):
                 moveset.add(Move(combo))
-        return moveset
+        '''
 
     def validate_player_input(self, player, chosen_cards):
         starting_player = self.state.players[self.state.starting_player_index]
