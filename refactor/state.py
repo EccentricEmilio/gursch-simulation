@@ -40,14 +40,10 @@ class Move:
         return len(self.cards)
 
 class GameState:
-    def __init__(self, settings: dict = {}):
-        self.settings = NORMAL_SETTINGS
-        for rule_key, rule_value in settings.items():
-            self.settings[rule_key] = rule_value
-
-        self.TOTAL_CARDS_PER_HAND = self.settings["cards_per_hand"]
+    def __init__(self, player_count, settings: dict):
+        self.settings = settings
         self.turn_index = 0
-        self.player_count = self.settings["player_count"]
+        self.player_count = player_count
         self.board = []
         self.phase = 0 # 0 = SwitchPhase, 1 = PlayPhase, 2 = GameIsOver
         self.current_round = {}
@@ -58,7 +54,7 @@ class GameState:
         self.loser_score = ()
         self.ties = []
 
-        self.players = PLAYER_NAMES[0:self.settings["player_count"]]
+        self.players = PLAYER_NAMES[0:self.player_count]
         self.players_hands = {p: [] for p in self.players} 
         self.starting_player_index = None
         self.active_player_index = None
@@ -71,13 +67,18 @@ class GameState:
         return new_card_stack
     
     def deal_initial_hands(self):
-        self.players_hands = {p: self.return_cards(self.TOTAL_CARDS_PER_HAND) for p in self.players}
+        self.players_hands = {p: self.return_cards(self.settings["cards_per_hand"]) for p in self.players}
             
     def debug_set_hands(self, hands: dict):
         for player, hand in hands.items():
             self.players_hands[player] = hand
-            
-#boi = GameState()
-#boi.deal_initial_hands()
-#for p, h in boi.players_hands.items():
-#    print(p, [c.value for c in h])
+
+class GameResult:
+    def __init__(self, players, policies, loser_score, ties):
+        self.players = players
+        self.policies = policies
+        self.loser_score = loser_score
+        self.ties = ties 
+    
+    def print_stats(self):
+        pass

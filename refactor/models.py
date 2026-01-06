@@ -4,11 +4,18 @@ from state import GameState, Move
 class RandomPolicy:
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "RandomPolicy"
     
     def return_move(self, state: GameState, player: str, moveset: set) -> Move:
         choice = random.choice(list(moveset))
         return choice
 
+class LeadWithHighest:
+    def __init__(self):
+        pass
+    
 class HumanPolicy:
     def print_hand(self, prefix: str, hand: list):
         message = [prefix]
@@ -29,16 +36,10 @@ class HumanPolicy:
 
             self.print_hand("You have chosen these cards:", chosen_cards)
             return chosen_cards
-    
-    def print_starting_player(self, player: str):
-        print("The starting player is:", player)
-    
-    def print_loser(self, loser_score: tuple, ties):
-        if ties == []:
-            loser = loser_score[0]
-            score = loser_score[1]
-            print("Game is over")
-            print(loser + " lost, with a score of " + str(score))
-        elif ties != []:
-            print("It's a tie!")
-            print("These players tied: " + str(ties))
+
+
+POLICIES = [
+    RandomPolicy(),
+    RandomPolicy(),
+    RandomPolicy()
+]

@@ -44,9 +44,8 @@ ERROR_MESSAGES = {
     }
 }
 
-NORMAL_SETTINGS = {
+DEFAULT_SETTINGS = {
     "cards_per_hand": 5,
-    "player_count": 3,
     # If this is checked, responses must include duplicate cards or all cards must be the players
     # individual lowest cards. For example, if player-1 plays two Queens, player-2 must also play atleast
     # two Queens if they have them, otherwise they must play two of their lowest cards.
@@ -71,8 +70,3 @@ PLAYERS_HANDS_DEBUG = {
     #"Daniel": ["2S", "5H", "AS", "JD", "QH"]
     
 }
-
-def abbreviate(self):
-    v = VALUE_MAP[self.value]
-    abbreviation = v + self.suit[0]
-    return abbreviation   

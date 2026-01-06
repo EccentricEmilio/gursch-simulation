@@ -16,6 +16,9 @@ class TerminalUI:
         if turn_index == 0:
             print("Initial game setup complete.")
             self.print_starting_player(starting_player)
+                    # Prints should be handled outside engine
+        #print("Round " + str(self.state.turn_index) + " winner is " + self.state.players[self.state.starting_player_index])
+        #print("Current round results:" + str(self.state.current_round))
         print("------------------------")
         print("------------------------")
 

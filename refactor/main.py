@@ -3,16 +3,13 @@ from state import GameState
 from engine import GameEngine
 from models import RandomPolicy
 import pydealer
+from simulation import Simulation
 from constants import *
-
-player1 = RandomPolicy()
-player2 = RandomPolicy()
-player3 = RandomPolicy()
-
+'''
 policies = [
-    player1,
-    player2,
-    player3
+    RandomPolicy(),
+    RandomPolicy(),
+    RandomPolicy()
 ]
 
 def run_terminal_game():
@@ -35,3 +32,20 @@ def run_terminal_game():
     ui.print_loser(state.loser_score, state.ties)
 if __name__ == "__main__":
     run_terminal_game()
+'''
+
+player_count = 4
+settings = {}
+random_policies = [RandomPolicy()] * 4
+
+default_sim = Simulation(random_policies)
+
+
+
+if __name__ == "__main__":
+    result = default_sim.run_sim(player_count)
+
+    print("Players:", result.players)
+    print("Policies:", result.policies)
+    print("Loser Score:", result.loser_score)
+    print("Ties:", result.ties)
