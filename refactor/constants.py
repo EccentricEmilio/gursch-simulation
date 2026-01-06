@@ -65,10 +65,11 @@ PLAYER_NAMES = [
 ]
 
 PLAYERS_HANDS_DEBUG = {
-    "Abraham": ["2H", "2S", "6S", "8H", "KC"],
-    "Benjamin": ["2H", "2S", "6S", "8H", "KC"],
+    #"Abraham": ["2H", "2S", "6S", "8H", "KC"],
+    #"Benjamin": ["2H", "2S", "6S", "8H", "KC"],
     #"Caleb": ["2C", "JC", "KD", "KS", "QC"],
     #"Daniel": ["2S", "5H", "AS", "JD", "QH"]
+    
 }
 
 def abbreviate(self):

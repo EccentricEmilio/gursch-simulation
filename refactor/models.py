@@ -6,9 +6,7 @@ class RandomPolicy:
         pass
     
     def return_move(self, state: GameState, player: str, moveset: set) -> Move:
-        print("HELLO", player)
         choice = random.choice(list(moveset))
-        print(choice)
         return choice
 
 class HumanPolicy:

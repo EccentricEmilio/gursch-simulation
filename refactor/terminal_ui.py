@@ -3,8 +3,7 @@ class TerminalUI:
     def __init__(self):
         pass 
         
-    def print_game_state(self, turn_index: int, players_hand: dict, 
-                         initial_setup: bool = False, starting_player: str = ""):
+    def print_game_state(self, turn_index: int, players_hand: dict, starting_player:str):
         players = list(players_hand.keys())
         print("------------------------")
         print("------------------------")
@@ -13,8 +12,8 @@ class TerminalUI:
         
         for player in players:
             self.print_hand(str(player)+ "'s hand:", players_hand[player])
-        
-        if initial_setup:
+
+        if turn_index == 0:
             print("Initial game setup complete.")
             self.print_starting_player(starting_player)
         print("------------------------")
@@ -26,17 +25,12 @@ class TerminalUI:
             message.append(card.raw)
         print(" ".join(message))
 
-    def prompt_player(self, player: str, hand: list):
-        print("It's " + player + "'s turn.")
-        self.print_hand("This is their hand:", hand)
-        self.print_hand("They have chosen these cards:", chosen_cards)
-
     def print_players_choice(self, state):
-        for player, hand in state.players_hands.items():
+        players_order = state.players[state.active_player_index:]
+        players_order.extend(state.players[:state.active_player_index])
+        for player in players_order:
             chosen_cards = state.current_round[player]
-            print("It's " + player + "'s turn.")
-            self.print_hand("This is their hand:", hand)
-            self.print_hand("They have chosen these cards:", chosen_cards)
+            self.print_hand(player + " have chosen these cards:", chosen_cards)
     
     def print_starting_player(self, player: str):
         print("The starting player is:", player)
