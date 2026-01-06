@@ -1,4 +1,4 @@
-from state import Card
+from state import Card, GameState
 class TerminalUI:
     def __init__(self):
         pass 
@@ -27,9 +27,15 @@ class TerminalUI:
         print(" ".join(message))
 
     def prompt_player(self, player: str, hand: list):
+        print("It's " + player + "'s turn.")
+        self.print_hand("This is their hand:", hand)
+        self.print_hand("They have chosen these cards:", chosen_cards)
+
+    def print_players_choice(self, state):
+        for player, hand in state.players_hands.items():
+            chosen_cards = state.current_round[player]
             print("It's " + player + "'s turn.")
             self.print_hand("This is their hand:", hand)
-            chosen_cards = input("Choose which cards to play: ")
             self.print_hand("They have chosen these cards:", chosen_cards)
     
     def print_starting_player(self, player: str):

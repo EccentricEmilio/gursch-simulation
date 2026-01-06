@@ -5,10 +5,14 @@ from models import RandomPolicy
 import pydealer
 from constants import *
 
+player1 = RandomPolicy()
+player2 = RandomPolicy()
+player3 = RandomPolicy()
+
 policies = [
-    RandomPolicy(),
-    RandomPolicy(),
-    RandomPolicy()
+    player1,
+    player2,
+    player3
 ]
 
 def run_terminal_game():
@@ -25,6 +29,7 @@ def run_terminal_game():
     # 0 is TEMPORARY 
     while state.phase == 0:
         engine.process_turn()
+        ui.print_players_choice(state)
         engine.resolve_round() # determine round winner and update state
         ui.print_game_state(state.turn_index, state.players_hands) # process each player's turn
         engine.advance_state() # Check if game is over

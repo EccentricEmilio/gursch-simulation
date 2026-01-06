@@ -56,12 +56,12 @@ NORMAL_SETTINGS = {
 }
 
 PLAYER_NAMES = [
-    "Abraham",
+    "Abraham ",
     "Benjamin",
-    "Caleb",
-    "Daniel",
-    "Emil",
-    "Fred"
+    "Caleb   ",
+    "Daniel  ",
+    "Emil    ",
+    "Fred    " 
 ]
 
 PLAYERS_HANDS_DEBUG = {

@@ -35,28 +35,32 @@ class GameEngine:
         
         self.state.active_player_index = self.state.starting_player_index
         active_player = self.state.players[self.state.active_player_index]
+        starting_player = self.state.players[self.state.starting_player_index]
+        players_order = self.state.players[self.state.active_player_index:]
+        players_order.extend(self.state.players[:self.state.active_player_index])
 
-        for p, policy in self.players_policies.items():
-            legal_moveset = self.legal_moveset(active_player)
-            print(legal_moveset)
+        for p in players_order:
+            policy = self.players_policies[p]
+
+            legal_moveset = self.legal_moveset(p, starting_player)
+
             move_played = policy.return_move(
                 self.state, 
                 p, 
                 legal_moveset
             )
-            self.state.current_round[active_player] = move_played
+            self.state.current_round[p] = move_played
 
             # remove cards
-            print("")
             for card in move_played:
-                self.state.players_hands[active_player].remove(card)
+                self.state.players_hands[p].remove(card)
 
             self.state.active_player_index += 1
             if self.state.active_player_index >= len(self.state.players):
                 self.state.active_player_index = 0
             active_player = self.state.players[self.state.active_player_index]
 
-    def legal_moveset(self, player: str):
+    def legal_moveset(self, player: str, starting_player):
         moveset = set()
         hand = self.state.players_hands[player]
         # If it player in mention starts the round, special rules apply
@@ -70,15 +74,19 @@ class GameEngine:
         '''
 
         # Slim down logic for times sake?, maybe check for rules before creation.
-        if self.state.current_round == {}:
+        if player == starting_player:
             for r in range(1, len(hand) + 1):
                 for combo in combinations(hand, r):
+                    # VALIDATION LOGIC BELOW MAYBE MOVE!!!
                     if combo.count(combo[0]) == r:
                         moveset.add(Move(combo))
+            print("Legal moveset for",player, moveset)
         else:
-            for r in range(1, len(hand) + 1):
-                for combo in combinations(hand, r):
-                    moveset.add(Move(combo))
+            move_size = len(self.state.current_round[starting_player])
+            # VALIDATION LOGIC BELOW MAYBE MOVE!!!
+            # move_size is entirerly validation logic
+            for combo in combinations(hand, move_size):
+                moveset.add(Move(combo))
         return moveset
 
     def validate_player_input(self, player, chosen_cards):
@@ -178,7 +186,7 @@ class GameEngine:
         
             player_scores = []
             for player, cards in self.state.current_round.items():
-                values = [POKER_VALUES[c[0]] for c in cards]
+                values = [c.int_value for c in cards]
                 score = sum(values)
                 player_score = (player, score)
                 player_scores.append(player_score)

@@ -9,7 +9,8 @@ class Card:
         self.value = value
         self.int_value = POKER_VALUES[self.value]
         self.suit = suit
-        self.raw = self.value + " of " + self.suit
+        self.raw = self.value + self.suit[0]
+        #self.raw = self.value + " of " + self.suit
         self.abbrev = self.value + self.suit[0]
     
     def __eq__(self, other):
@@ -34,6 +35,9 @@ class Move:
 
     def __repr__(self):
         return f"Move({self.cards})"
+    
+    def __len__(self):
+        return len(self.cards)
 
 class GameState:
     def __init__(self, settings: dict = {}):

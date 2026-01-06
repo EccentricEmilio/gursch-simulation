@@ -6,7 +6,10 @@ class RandomPolicy:
         pass
     
     def return_move(self, state: GameState, player: str, moveset: set) -> Move:
-        return random.choice(list(moveset))
+        print("HELLO", player)
+        choice = random.choice(list(moveset))
+        print(choice)
+        return choice
 
 class HumanPolicy:
     def print_hand(self, prefix: str, hand: list):
