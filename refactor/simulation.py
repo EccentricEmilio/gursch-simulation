@@ -1,13 +1,8 @@
 from terminal_ui import TerminalUI
 from state import *
 from engine import GameEngine
-from models import RandomPolicy, POLICIES
-import pydealer
 from constants import *
 from copy import deepcopy 
-
-
-
 
 class Simulation:
     def __init__(self, policies, default_settings=DEFAULT_SETTINGS):

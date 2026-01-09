@@ -32,8 +32,8 @@ class TerminalUI:
         players_order = state.players[state.active_player_index:]
         players_order.extend(state.players[:state.active_player_index])
         for player in players_order:
-            chosen_cards = state.current_round[player]
-            self.print_hand(player + " have chosen these cards:", chosen_cards)
+            move = state.current_round[player]
+            print(player + " has played this move:", move)
     
     def print_loser(self, loser_score: tuple, ties: list):
         if ties == []:

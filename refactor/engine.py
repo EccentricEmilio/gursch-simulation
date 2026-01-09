@@ -152,8 +152,8 @@ class GameEngine:
             self.state.phase += 1
         
             player_scores = []
-            for player, cards in self.state.current_round.items():
-                values = [c.int_value for c in cards]
+            for player, move in self.state.current_round.items():
+                values = [c.int_value for c in move]
                 score = sum(values)
                 player_score = (player, score)
                 player_scores.append(player_score)

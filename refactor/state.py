@@ -24,7 +24,7 @@ class Card:
         return self.int_value < other.int_value
     
     def __repr__(self):
-        return self.raw
+        return f"{self.raw}"
 
 class Move:
     def __init__(self, cards: list):
@@ -34,7 +34,8 @@ class Move:
         return self.cards[index]
 
     def __repr__(self):
-        return f"Move({self.cards})"
+        str_cards = [repr(c) for c in self.cards]
+        return f"Move({', '.join(str_cards)})"
     
     def __len__(self):
         return len(self.cards)
