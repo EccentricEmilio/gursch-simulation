@@ -74,11 +74,12 @@ class GameState:
             self.players_hands[player] = hand
 
 class GameResult:
-    def __init__(self, players, policies, loser_score, ties):
+    def __init__(self, players, policies, loser_score, ties, board):
         self.players = players
         self.policies = policies
         self.loser_score = loser_score
-        self.ties = ties 
+        self.ties = ties
+        self.board = board
     
     def print_stats(self):
         pass

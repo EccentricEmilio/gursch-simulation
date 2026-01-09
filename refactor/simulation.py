@@ -27,6 +27,26 @@ class Simulation:
             engine.advance_state() # Check if game is over
 
         return self.to_result(state)
+
+    def run_terminal_sim(self, player_count: int) -> GameResult:
+        state = GameState(player_count, self.settings)
+        engine = GameEngine(state, self.policies)
+        ui = TerminalUI()
+
+        state.deal_initial_hands()
+        #state.debug_set_hands(PLAYERS_HANDS_DEBUG)  # For testing purposes
+        # Deck will contain duplicate cards if using debug hands
+        engine.determine_starting_index()
+        # 0 is TEMPORARY 
+        while state.phase == 0:
+            ui.print_game_state(state) # process each player's turn
+            engine.process_turn()
+            ui.print_players_choice(state)
+            engine.resolve_round() # determine round winner and update state
+            engine.advance_state() # Check if game is over
+
+        ui.print_loser(state.loser_score, state.ties)
+        return self.to_result(state)
     
     def to_result(self, state) -> GameResult:
         policies = [str(policy) for policy in self.policies]
@@ -34,5 +54,6 @@ class Simulation:
             state.players,
             policies,
             state.loser_score,
-            state.ties
+            state.ties,
+            state.board
         )

@@ -5,6 +5,8 @@ from models import RandomPolicy
 import pydealer
 from simulation import Simulation
 from constants import *
+import numpy as np
+from pprint import pprint
 '''
 policies = [
     RandomPolicy(),
@@ -39,13 +41,28 @@ settings = {}
 random_policies = [RandomPolicy()] * 4
 
 default_sim = Simulation(random_policies)
-
-
+score_list = []
 
 if __name__ == "__main__":
-    result = default_sim.run_sim(player_count)
-
+    result = default_sim.run_terminal_sim(player_count)
+    print("----------SIM DONE----------")
     print("Players:", result.players)
     print("Policies:", result.policies)
     print("Loser Score:", result.loser_score)
     print("Ties:", result.ties)
+    print("Board:")
+    #pprint(result.board)
+'''
+if __name__ == "__main__":
+    for i in range(1000):
+        result = default_sim.run_sim(player_count)
+
+        #print("Players:", result.players)
+        #print("Policies:", result.policies)
+        #print("Loser Score:", result.loser_score)
+        #print("Ties:", result.ties)
+        score_list.append(result.loser_score[1])
+    score_array = np.asarray(score_list)
+    avg = np.mean(score_array)
+    print(avg)
+'''

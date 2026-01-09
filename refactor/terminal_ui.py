@@ -3,20 +3,20 @@ class TerminalUI:
     def __init__(self):
         pass 
         
-    def print_game_state(self, turn_index: int, players_hand: dict, starting_player:str):
-        players = list(players_hand.keys())
+    def print_game_state(self, state: GameState):
+    #def print_game_state(self, turn_index: int, players_hand: dict, starting_player:str):
         print("------------------------")
         print("------------------------")
-        print("Turn: " + str(turn_index))
+        print("Turn: " + str(state.turn_index))
         print("Hands:")
         
-        for player in players:
-            self.print_hand(str(player)+ "'s hand:", players_hand[player])
+        for player in state.players:
+            self.print_hand(str(player)+ "'s hand:", state.players_hands[player])
 
-        if turn_index == 0:
+        if state.turn_index == 0:
+            starting_player = state.players[state.starting_player_index]
             print("Initial game setup complete.")
-            self.print_starting_player(starting_player)
-                    # Prints should be handled outside engine
+            print("The starting player is:", starting_player)
         #print("Round " + str(self.state.turn_index) + " winner is " + self.state.players[self.state.starting_player_index])
         #print("Current round results:" + str(self.state.current_round))
         print("------------------------")
@@ -34,9 +34,6 @@ class TerminalUI:
         for player in players_order:
             chosen_cards = state.current_round[player]
             self.print_hand(player + " have chosen these cards:", chosen_cards)
-    
-    def print_starting_player(self, player: str):
-        print("The starting player is:", player)
     
     def print_loser(self, loser_score: tuple, ties: list):
         if ties == []:
