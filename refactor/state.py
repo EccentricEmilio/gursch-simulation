@@ -9,8 +9,8 @@ class Card:
         self.value = value
         self.int_value = POKER_VALUES[self.value]
         self.suit = suit
-        self.raw = self.value + self.suit[0]
-        #self.raw = self.value + " of " + self.suit
+        #self.raw = self.value + self.suit[0]
+        self.raw = self.value + " of " + self.suit
         self.abbrev = self.value + self.suit[0]
     
     def __eq__(self, other):
@@ -24,7 +24,7 @@ class Card:
         return self.int_value < other.int_value
     
     def __repr__(self):
-        return f"{self.raw}"
+        return f"{self.abbrev}"
 
 class Move:
     def __init__(self, cards: list):

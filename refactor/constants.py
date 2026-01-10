@@ -55,18 +55,17 @@ DEFAULT_SETTINGS = {
 }
 
 PLAYER_NAMES = [
-    "Abraham ",
-    "Benjamin",
-    "Caleb   ",
-    "Daniel  ",
-    "Emil    ",
-    "Fred    " 
+    "Amanda",
+    "Bertil",
+    "Carina",
+    "Daniel",
+    "Elinor",
+    "Fabian" 
 ]
 
 PLAYERS_HANDS_DEBUG = {
-    #"Abraham": ["2H", "2S", "6S", "8H", "KC"],
+    #"Abraham": [Card("2" "H"), Card("6","S"), Card("8","S"), Card("K","H"), Card("J","C")],
     #"Benjamin": ["2H", "2S", "6S", "8H", "KC"],
     #"Caleb": ["2C", "JC", "KD", "KS", "QC"],
-    #"Daniel": ["2S", "5H", "AS", "JD", "QH"]
-    
+    #"Daniel": ["2S", "5H", "AS", "JD", "QH"]  
 }

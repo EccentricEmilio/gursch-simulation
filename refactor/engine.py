@@ -1,5 +1,5 @@
 from constants import *
-from state import GameState, Card, Move
+from state import GameState, Card, Move, PLAYERS_HANDS_DEBUG
 from models import *
 from itertools import combinations
 from itertools import groupby
@@ -9,20 +9,30 @@ class GameEngine:
         self.state = state
         self.players_policies = {p: policies[self.state.players.index(p)] for p in self.state.players}
         
-    def swap_hand(self, player):
+    def swap_hand(self, player: str):
         # Swap all five, only allowed once at the beginning of the game
         new_cards = self.state.return_cards(5)
         self.state.players_hands[player] = new_cards
-        return
 
-    def swap_cards(self, amount, player):
+    def swap_cards(self, swap_cards: list[Card], player: str):
         # Swap X amount of cards
-        new_cards = self.state.return_cards(amount)
-        self.state.players_hands[player] = new_cards
+        # swap_cards is cards in hand designated to be swapped
+        swap_card_abbrev = [c.abbrev for c in swap_cards]
+        new_cards = self.state.return_cards(len(swap_cards))
+        hand = self.state.players_hands[player]
+        # BUG, here we need to check cards equality based on suit and value
+        # not just value, otherwise mulitiples of same values get removed
+        remaining_cards = [card for card in hand if card.abbrev not in swap_card_abbrev]
+        new_hand = new_cards + remaining_cards
+        self.state.players_hands[player] = new_hand
     
     def swap_phase(self):
-        return
+        
+        pass
     
+    def process_0_turn(self):
+        pass
+        
     def process_turn(self):
         self.state.current_round = {}
         
