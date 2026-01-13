@@ -1,5 +1,7 @@
-COMPLETE GameEngine
+1. COMPLETE game engine
 - Add first phase
+    - Fix current_turn to add turn_index and for first phase
+        So that ui can print info
 - Add mini gursch, in some 
 - Add handling for sevens
 

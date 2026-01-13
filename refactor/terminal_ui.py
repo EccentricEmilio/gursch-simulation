@@ -2,16 +2,21 @@ from state import Card, GameState
 class TerminalUI:
     def __init__(self):
         pass 
-        
+    
+    def print_throw_turn(self, state: GameState):
+        print("Cards have been thrown")
+        for p in state.players:
+            self.print_hand(state, "This is their new hand:", p)
+            
+    
     def print_game_state(self, state: GameState):
-    #def print_game_state(self, turn_index: int, players_hand: dict, starting_player:str):
         print("------------------------")
         print("------------------------")
         print("Turn: " + str(state.turn_index))
         print("Hands:")
         
         for player in state.players:
-            self.print_hand(str(player)+ "'s hand:", state.players_hands[player])
+            self.print_hand(state, str(player)+ "'s hand:", player)
 
         if state.turn_index == 0:
             starting_player = state.players[state.starting_player_index]
@@ -22,10 +27,11 @@ class TerminalUI:
         print("------------------------")
         print("------------------------")
 
-    def print_hand(self, prefix: str, hand: list):
+    def print_hand(self, state: GameState, prefix: str, player: list):
         message = [prefix]
+        hand = state.players_hands[player]
         for card in hand:
-            message.append(card.raw)
+            message.append(str(card))
         print(" ".join(message))
 
     def print_players_choice(self, state):

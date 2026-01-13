@@ -1,5 +1,6 @@
 import random
-from state import GameState, Move
+from state import GameState, Move, Card
+from itertools import combinations
     
 class RandomPolicy:
     def __str__(self):
@@ -7,6 +8,17 @@ class RandomPolicy:
     
     def return_move(self, state: GameState, player: str, moveset: set) -> Move:
         choice = random.choice(list(moveset))
+        return choice
+
+    def return_throw_amount(self, state: GameState, player: str) -> Move:
+        throw_amount = random.randint(0,5)
+        print(throw_amount, "THROWN_CHOICE")
+        return throw_amount
+    
+    def return_throw(self, state: GameState, player: str, throw_amount: int) -> list[Card]:
+        hand = state.players_hands[player]
+        throw_combinations = combinations(hand, throw_amount)
+        choice = random.choice(list(throw_combinations))
         return choice
 
 class LeadWithHighest:
@@ -19,6 +31,9 @@ class HumanPolicy:
         for card in hand:
             message.append(card)
         print(" ".join(message))
+    
+    def return_throw(self):
+        return
 
     def return_move(self, state: GameState, player: str, moveset: set) -> Move:
         hand = state.players_hands[player]

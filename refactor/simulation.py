@@ -13,10 +13,7 @@ class Simulation:
         state = GameState(player_count, self.settings)
         engine = GameEngine(state, self.policies)
 
-        state.deal_initial_hands()
-        engine.determine_starting_index()
-
-        while state.phase == 0:
+        while state.is_game():
             engine.process_turn() 
             engine.resolve_round() # determine round winner and update state
             engine.advance_state() # Check if game is over
@@ -28,15 +25,14 @@ class Simulation:
         engine = GameEngine(state, self.policies)
         ui = TerminalUI()
 
-        state.deal_initial_hands()
-        #state.debug_set_hands(PLAYERS_HANDS_DEBUG)  # For testing purposes
-        # Deck will contain duplicate cards if using debug hands
-        engine.determine_starting_index()
-        # 0 is TEMPORARY 
-        while state.phase == 0:
+        while state.is_game():
+            print(state.phase, "PHASE")
             ui.print_game_state(state) # process each player's turn
             engine.process_turn()
-            ui.print_players_choice(state)
+            if state.phase == 1:
+                ui.print_throw_turn(state)
+            elif state.phase == 2:
+                ui.print_players_choice(state)
             engine.resolve_round() # determine round winner and update state
             engine.advance_state() # Check if game is over
 

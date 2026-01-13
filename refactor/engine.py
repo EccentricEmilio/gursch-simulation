@@ -1,5 +1,5 @@
 from constants import *
-from state import GameState, Card, Move, PLAYERS_HANDS_DEBUG
+from state import GameState, Card, Move, Round, PLAYERS_HANDS_DEBUG
 from models import *
 from itertools import combinations
 from itertools import groupby
@@ -9,7 +9,11 @@ class GameEngine:
         self.state = state
         self.players_policies = {p: policies[self.state.players.index(p)] for p in self.state.players}
         
+        self.determine_starting_index()
+        state.phase = 1
+        
     def swap_hand(self, player: str):
+        # NOT IMPLEMENTED
         # Swap all five, only allowed once at the beginning of the game
         new_cards = self.state.return_cards(5)
         self.state.players_hands[player] = new_cards
@@ -22,19 +26,52 @@ class GameEngine:
         hand = self.state.players_hands[player]
         # BUG, here we need to check cards equality based on suit and value
         # not just value, otherwise mulitiples of same values get removed
+        # FIXED
         remaining_cards = [card for card in hand if card.abbrev not in swap_card_abbrev]
         new_hand = new_cards + remaining_cards
         self.state.players_hands[player] = new_hand
     
-    def swap_phase(self):
-        
-        pass
+    def process_throw_turn(self):
+        throw_amount = self.determine_throw_amount()
+        # CHANGE THIS STATEMENT, BAD CODE
+        if throw_amount == 0:
+            self.state.throw_amount = 0
+            print("DONE")
+            return
+        print("NOT SKIPPED")
+        for player in self.state.players:
+            policy = self.players_policies[player]
+            thrown_cards = self.get_throw_cards(throw_amount, player)
+            self.swap_cards(thrown_cards, player)
+        return 
     
-    def process_0_turn(self):
-        pass
+    def determine_throw_amount(self):
+        # Each player gets to say their preferred throw amount,
+        # and the lowest amount is the set amount
+        # If someone says 0, then phase 0 is over
+        throw_amount_list = []
+        for p in self.state.players:
+            policy = self.players_policies[p]
+            throw_amount = policy.return_throw_amount(
+                self.state,
+                p
+            )
+            throw_amount_list.append(throw_amount)
+        round_throw_amount = min(throw_amount_list)
+        print(round_throw_amount, "OFFICAL DECISION", throw_amount == 0)
+        return round_throw_amount
+        
+        
+    def get_throw_cards(self, throw_amount: int, player: str) -> list[Card]:
+        policy = self.players_policies[player]
+        return policy.return_throw(self.state, player, throw_amount)
+        
         
     def process_turn(self):
-        self.state.current_round = {}
+        if self.state.phase == 1:
+            self.process_throw_turn()
+            return
+        current_round = Round(self.state.round_index, self.state.phase, [])
         
         self.state.active_player_index = self.state.starting_player_index
         active_player = self.state.players[self.state.active_player_index]
@@ -129,7 +166,7 @@ class GameEngine:
         winner = None
         winner_value = -1
         
-        if self.state.turn_index == 0:
+        if self.state.round_index == 0:
             for p in self.state.players:
                 hand = self.state.players_hands.get(p)
                 int_value = hand[-1].int_value
@@ -139,7 +176,7 @@ class GameEngine:
                     winner_value = int_value
 
         # This block currently only handles the last card played in the round
-        if self.state.turn_index > 0:
+        if self.state.round_index > 0:
             for player, Move in self.state.current_round.items():
                 int_value = Move[0].int_value
 
@@ -152,14 +189,20 @@ class GameEngine:
         self.state.active_player_index = winner_index
             
     def resolve_round(self):
+        # Combine with advance_state?
         # Determine round winner and update state
-        self.state.turn_index += 1
-        self.determine_starting_index()
+        self.state.round_index += 1
+        if self.state.phase == 2:
+            self.determine_starting_index()
 
     
-    def advance_state(self):
+    def advance_state(self):   
+        print("self.state.throw_amount check")
+        if self.state.throw_amount == 0:
+            
+            self.state.phase = 2     
         if self.state.players_hands[self.state.players[0]] == []:
-            self.state.phase += 1
+            self.state.phase = 3
         
             player_scores = []
             for player, move in self.state.current_round.items():

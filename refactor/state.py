@@ -1,7 +1,7 @@
 from functools import total_ordering
 import pydealer 
 from constants import *
-from typing import Tuple
+from typing import Tuple, Any
 
 @total_ordering
 class Card:
@@ -30,7 +30,7 @@ class Move:
     def __init__(self, cards: list):
         self.cards = tuple(cards)
     
-    def __getitem__(self, index ):
+    def __getitem__(self, index):
         return self.cards[index]
 
     def __repr__(self):
@@ -39,15 +39,35 @@ class Move:
     
     def __len__(self):
         return len(self.cards)
+    
+class RoundRecord:
+    def __init__(self, round_index: int, game_phase: int, Turn):
+        '''
+        0 = SetupPhase, 1 = ThrowPhase, 2 = PlayPhase, 3 = GameIsOver
+        # actions = current_turn
+        {"player": list[Card] or Move}
+        '''
+        self.round_index = round_index
+        self.game_phase = game_phase
+        self.actions = actions
+        
+class ActionRecord:
+    def __init__(self, player: str, turn_index: int, move: Any):
+        self.player = player
+        self.turn_index = turn_index
+        self.move = move
+        
 
 class GameState:
     def __init__(self, player_count, settings: dict):
         self.settings = settings
-        self.turn_index = 0
+        self.round_index = 0
         self.player_count = player_count
         self.board = []
-        self.phase = 0 # 0 = SwitchPhase, 1 = PlayPhase, 2 = GameIsOver
+        self.phase = 0 # 0 = SetupPhase, 1 = ThrowPhase, 2 = PlayPhase, 3 = GameIsOver
+        self.throw_amount = 1
         self.current_round = {}
+        #
         
         self.deck = pydealer.Deck() 
         self.deck.shuffle()
@@ -59,6 +79,11 @@ class GameState:
         self.players_hands = {p: [] for p in self.players} 
         self.starting_player_index = None
         self.active_player_index = None
+        
+        self.deal_initial_hands()
+    
+    def is_game(self):
+        return self.phase < 3
 
     def return_cards(self, amount: int) -> list:
         if len(self.deck) < amount:
