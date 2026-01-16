@@ -1,3 +1,18 @@
+# 0 = SetupPhase, 1 = ThrowPhase, 2 = PlayPhase, 3 = GameIsOver
+SETUP_PHASE = 0
+THROW_PHASE = 1
+PLAY_PHASE = 2
+GAMEOVER_PHASE = 3
+
+PHASES = {
+    "0":"Setup phase",
+    "1":"Throw phase",
+    "2":"Play phase",
+    "3":"Game is over",
+}
+
+DIVIDER = "-" * 25
+
 VALUE_MAP = {
     "2": "2",
     "3": "3",
@@ -45,7 +60,7 @@ ERROR_MESSAGES = {
 }
 
 DEFAULT_SETTINGS = {
-    "cards_per_hand": 5,
+    "hand_size": 5,
     # If this is checked, responses must include duplicate cards or all cards must be the players
     # individual lowest cards. For example, if player-1 plays two Queens, player-2 must also play atleast
     # two Queens if they have them, otherwise they must play two of their lowest cards.

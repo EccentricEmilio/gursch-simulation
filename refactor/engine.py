@@ -1,23 +1,81 @@
 from constants import *
-from state import GameState, Card, Move, Round, PLAYERS_HANDS_DEBUG
+from state import GameState, Card, Move, RoundRecord, TurnRecord, ThrowRecord
 from models import *
 from itertools import combinations
-from itertools import groupby
-  
+
 class GameEngine:
     def __init__(self, state: GameState, policies: list):
         self.state = state
         self.players_policies = {p: policies[self.state.players.index(p)] for p in self.state.players}
+            
+            
+    def step(self):
+        if self.state.phase == SETUP_PHASE:
+            self.setup()
+        elif self.state.phase == THROW_PHASE:
+            self.process_throw_round()
+        elif self.state.phase == PLAY_PHASE:
+            self.start_round()
+            self.play_rounds()
+            self.end_round() 
+        elif self.state.phase == GAMEOVER_PHASE:
+            pass
         
-        self.determine_starting_index()
-        state.phase = 1
+    def setup(self):
+        self.state.deal_initial_hands()
         
-    def swap_hand(self, player: str):
-        # NOT IMPLEMENTED
-        # Swap all five, only allowed once at the beginning of the game
-        new_cards = self.state.return_cards(5)
-        self.state.players_hands[player] = new_cards
+        # set starting player index
+        winner_value = -1
+        winner = None
+        for p in self.state.players:
+                hand = self.state.players_hands.get(p)
+                int_value = hand[-1].int_value
 
+                if int_value >= winner_value:
+                    winner = p
+                    winner_value = int_value
+        self.state.player_zero = winner
+        self.state.phase += 1
+
+
+    def process_throw_round(self):
+        '''       
+        Docstring for process_throw_round
+        
+        :param self: Description
+        '''
+        throw_amounts = self.determine_throw_amounts()
+        lowest_throw = min(throw_amounts)
+        execute_throw = lowest_throw > 0
+        if not execute_throw:
+            self.state.phase += 1
+        
+        self.state.current_round = RoundRecord(
+            self.state.round_index, 
+            THROW_PHASE,
+            [],
+            self.state.players_hands
+        )
+        
+        for i, p in enumerate(self.state.players):
+            p_throw_amount = throw_amounts[i]
+            
+            thrown_cards = []
+            if execute_throw:
+                thrown_cards = self.get_throw_cards(lowest_throw, p)
+                self.swap_cards(thrown_cards, p)
+            
+            record = ThrowRecord(
+                p,
+                p_throw_amount,
+                thrown_cards
+            )
+            
+            self.state.current_round.turns.append(record)
+        self.state.round_index += 1
+        self.state.board.append(self.state.current_round)
+    
+    
     def swap_cards(self, swap_cards: list[Card], player: str):
         # Swap X amount of cards
         # swap_cards is cards in hand designated to be swapped
@@ -31,76 +89,105 @@ class GameEngine:
         new_hand = new_cards + remaining_cards
         self.state.players_hands[player] = new_hand
     
-    def process_throw_turn(self):
-        throw_amount = self.determine_throw_amount()
-        # CHANGE THIS STATEMENT, BAD CODE
-        if throw_amount == 0:
-            self.state.throw_amount = 0
-            print("DONE")
-            return
-        print("NOT SKIPPED")
-        for player in self.state.players:
-            policy = self.players_policies[player]
-            thrown_cards = self.get_throw_cards(throw_amount, player)
-            self.swap_cards(thrown_cards, player)
-        return 
     
-    def determine_throw_amount(self):
-        # Each player gets to say their preferred throw amount,
-        # and the lowest amount is the set amount
-        # If someone says 0, then phase 0 is over
-        throw_amount_list = []
-        for p in self.state.players:
-            policy = self.players_policies[p]
-            throw_amount = policy.return_throw_amount(
-                self.state,
-                p
-            )
-            throw_amount_list.append(throw_amount)
-        round_throw_amount = min(throw_amount_list)
-        print(round_throw_amount, "OFFICAL DECISION", throw_amount == 0)
-        return round_throw_amount
+    def determine_throw_amounts(self) -> list[int]:
+        '''
+        Create a list of players desired throw_amount,
+        the lowest amount is the set amount.
+        The list which is returned is in state.players order.
+        
+        '''
+        players = self.state.players
+        throw_amount_list = [self.players_policies[p].return_throw_amount(self.state, p) for p in players]
+        return throw_amount_list
         
         
     def get_throw_cards(self, throw_amount: int, player: str) -> list[Card]:
         policy = self.players_policies[player]
         return policy.return_throw(self.state, player, throw_amount)
+# -------------------------- THROW DONE -----------------------------
+
+    def start_round(self):
+        cur_hand_size = len(list(self.state.players_hands.values())[0]) 
+        if cur_hand_size == self.state.settings["hand_size"]:
+            # first play round
+            starting_player = self.state.player_zero
+        else:
+            # This assumes current_round.turns is ordered correctly
+            # possible BUG
+            starting_player = self.return_starting_player(self.state.current_round.turns)
+
+        self.state.current_round = RoundRecord(
+            self.state.round_index,
+            PLAY_PHASE,
+            [],
+            self.state.players_hands,
+            starting_player
+        )
+    
+    def play_rounds(self):
+        starting_player = self.state.current_round.starting_player
+        start_index = self.state.players.index(starting_player)
+        round_order = self.state.players[start_index:] + self.state.players[:start_index]
         
+        for p in round_order:
+            self.apply_move(p, round_order)
         
-    def process_turn(self):
-        if self.state.phase == 1:
-            self.process_throw_turn()
-            return
-        current_round = Round(self.state.round_index, self.state.phase, [])
-        
-        self.state.active_player_index = self.state.starting_player_index
-        active_player = self.state.players[self.state.active_player_index]
-        starting_player = self.state.players[self.state.starting_player_index]
-        players_order = self.state.players[self.state.active_player_index:]
-        players_order.extend(self.state.players[:self.state.active_player_index])
-
-        for p in players_order:
-            policy = self.players_policies[p]
-
-            legal_moveset = self.legal_moveset(p)
-
-            move_played = policy.return_move(
-                self.state, 
-                p, 
-                legal_moveset
-            )
-            self.state.current_round[p] = move_played
-
-            # remove cards
-            for card in move_played:
-                self.state.players_hands[p].remove(card)
-
-            self.state.active_player_index += 1
-            if self.state.active_player_index >= len(self.state.players):
-                self.state.active_player_index = 0
-            active_player = self.state.players[self.state.active_player_index]
         self.state.board.append(self.state.current_round)
 
+    
+    def apply_move(self, player: str, round_order: list[str]):
+        policy = self.players_policies[player]
+        legal_moveset = self.legal_moveset(player)
+        
+        move_played = policy.return_move(
+            self.state, 
+            player, 
+            legal_moveset
+        )
+        
+        turn_index = round_order.index(player)
+        current_turn = TurnRecord(player, turn_index, move_played)
+        
+        for card in move_played:
+            self.state.players_hands[player].remove(card)
+        
+        self.state.current_round.turns.append(current_turn)
+        
+        
+    def end_round(self):
+        '''
+        if self.state.current_round.type == "throw":
+            if self.state.current_round.get_lowest_throw_num( ) == 0:
+                # Someone said 0
+                self.return_starting_player(self.state.current_round.turns)
+        elif self.state.current_round.type == "play":
+            self.return_starting_player()
+        '''
+        self.state.round_index += 1
+        if self.state.players_hands[self.state.player_zero] == []:
+            self.state.phase += 1
+        
+    def calculate_losers(self):
+        round = self.state.board[-1]
+        turns = round.turns
+        
+        scores_by_player = {
+            turn.player: turn.move.score
+            for turn in turns
+        }
+        
+        highest_score = max(scores_by_player.values())
+        
+        losers = [
+            player
+            for player, score in scores_by_player.items()
+            if score == highest_score
+        ]
+        self.state.losers = losers
+        self.state.highest_score = highest_score
+        
+# ---------------------------- RULES ------------------------------------
     def is_legal_lead(self, move: Move) -> bool:
         # Check is move contains only duplicates
         values = {c.value for c in move.cards}
@@ -143,11 +230,11 @@ class GameEngine:
             return False
 
         # 2. First player rules
-        if not self.state.current_round:
+        if self.state.current_round.turns == []:
             return self.is_legal_lead(move)
 
         # 3. Response rules
-        lead_move = list(self.state.current_round.values())[0]
+        lead_move = self.state.current_round.turns[0].move
         return self.is_legal_response(move, lead_move, player) 
 
     def legal_moveset(self, player: str):
@@ -161,64 +248,28 @@ class GameEngine:
                     moveset.add(move)
                 test_moveset.add(move)
         return moveset
+# ---------------------------- RULE LOGIC END ---------------------
 
-    def determine_starting_index(self):
+    def return_starting_player(self, turns: list[TurnRecord])-> str:
         winner = None
         winner_value = -1
-        
-        if self.state.round_index == 0:
-            for p in self.state.players:
-                hand = self.state.players_hands.get(p)
-                int_value = hand[-1].int_value
-
-                if int_value >= winner_value:
-                    winner = p
-                    winner_value = int_value
-
-        # This block currently only handles the last card played in the round
-        if self.state.round_index > 0:
-            for player, Move in self.state.current_round.items():
-                int_value = Move[0].int_value
-
-                if int_value >= winner_value:
-                    winner = player
-                    winner_value = int_value
-        
-        winner_index = self.state.players.index(winner)
-        self.state.starting_player_index = winner_index
-        self.state.active_player_index = winner_index
-            
-    def resolve_round(self):
-        # Combine with advance_state?
-        # Determine round winner and update state
-        self.state.round_index += 1
-        if self.state.phase == 2:
-            self.determine_starting_index()
-
     
-    def advance_state(self):   
-        print("self.state.throw_amount check")
-        if self.state.throw_amount == 0:
+        # This block currently only handles the last card played in the round
+        for turn in turns:
+            int_value = turn.move[0].int_value
             
-            self.state.phase = 2     
-        if self.state.players_hands[self.state.players[0]] == []:
-            self.state.phase = 3
-        
-            player_scores = []
-            for player, move in self.state.current_round.items():
-                values = [c.int_value for c in move]
-                score = sum(values)
-                player_score = (player, score)
-                player_scores.append(player_score)
-            scores = [ps[1] for ps in player_scores]
-            highest_score = max(scores)
-            for p, s in player_scores:
-                if s == highest_score:
-                    loser = p
-            self.state.loser_score = (loser, highest_score)
-            if scores.count(max(scores)) > 1:
-                ties = []
-                for p, s in player_scores:
-                    if s == max(scores):
-                        ties.append(p)
-                self.state.ties = ties
+            if int_value >= winner_value:
+                winner = turn.player
+                winner_value = int_value
+        return winner
+
+
+    def sort_hands(self):
+        for p, h in self.state.players_hands.items():
+            h.sort()
+
+    def swap_hand(self, player: str):
+        # NOT IMPLEMENTED
+        # Swap all five, only allowed once at the beginning of the game
+        new_cards = self.state.return_cards(5)
+        self.state.players_hands[player] = new_cards

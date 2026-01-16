@@ -12,31 +12,25 @@ class Simulation:
     def run_sim(self, player_count: int) -> GameResult:
         state = GameState(player_count, self.settings)
         engine = GameEngine(state, self.policies)
+        ui = TerminalUI(state)
 
         while state.is_game():
-            engine.process_turn() 
-            engine.resolve_round() # determine round winner and update state
-            engine.advance_state() # Check if game is over
+            engine.step()
+        engine.calculate_losers()
 
         return self.to_result(state)
+
 
     def run_terminal_sim(self, player_count: int) -> GameResult:
         state = GameState(player_count, self.settings)
         engine = GameEngine(state, self.policies)
-        ui = TerminalUI()
+        ui = TerminalUI(state)
 
         while state.is_game():
-            print(state.phase, "PHASE")
-            ui.print_game_state(state) # process each player's turn
-            engine.process_turn()
-            if state.phase == 1:
-                ui.print_throw_turn(state)
-            elif state.phase == 2:
-                ui.print_players_choice(state)
-            engine.resolve_round() # determine round winner and update state
-            engine.advance_state() # Check if game is over
+            engine.step()
+        engine.calculate_losers()
+        ui.print_sim()
 
-        ui.print_loser(state.loser_score, state.ties)
         return self.to_result(state)
     
     def to_result(self, state) -> GameResult:
@@ -44,7 +38,7 @@ class Simulation:
         return GameResult(
             state.players,
             policies,
-            state.loser_score,
-            state.ties,
+            state.highest_score,
+            state.losers,
             state.board
         )

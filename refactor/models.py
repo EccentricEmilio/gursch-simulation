@@ -12,7 +12,6 @@ class RandomPolicy:
 
     def return_throw_amount(self, state: GameState, player: str) -> Move:
         throw_amount = random.randint(0,5)
-        print(throw_amount, "THROWN_CHOICE")
         return throw_amount
     
     def return_throw(self, state: GameState, player: str, throw_amount: int) -> list[Card]:
@@ -21,7 +20,7 @@ class RandomPolicy:
         choice = random.choice(list(throw_combinations))
         return choice
 
-class LeadWithHighest:
+class LeadWithHighestPolicy:
     def __init__(self):
         pass
     

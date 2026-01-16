@@ -1,52 +1,81 @@
-from state import Card, GameState
+from state import Card, GameState, RoundRecord
+from constants import *
 class TerminalUI:
-    def __init__(self):
+    def __init__(self, state):
+        self.state = state
+        
         pass 
     
-    def print_throw_turn(self, state: GameState):
-        print("Cards have been thrown")
-        for p in state.players:
-            self.print_hand(state, "This is their new hand:", p)
-            
-    
-    def print_game_state(self, state: GameState):
-        print("------------------------")
-        print("------------------------")
-        print("Turn: " + str(state.turn_index))
-        print("Hands:")
+    def print_sim(self):
+        board = self.state.board
         
-        for player in state.players:
-            self.print_hand(state, str(player)+ "'s hand:", player)
+            
+        for round in board:
+            print(DIVIDER)
+            for p, h in round.players_hands.items():
+                self.print_hand(f"{p}'s hand:", h)
+            print(DIVIDER)
+            print("Turn:", round.index)
+            print("Phase:", PHASES[str(round.game_phase)])
+            self.print_round(round)            
+        self.print_loser()
+        
+    def print_round(self, round):
+        if round.type == "throw":
+            self.print_throw_round(round)
+        elif round.type == "play":
+            self.print_play_round(round)
 
-        if state.turn_index == 0:
-            starting_player = state.players[state.starting_player_index]
-            print("Initial game setup complete.")
-            print("The starting player is:", starting_player)
-        #print("Round " + str(self.state.turn_index) + " winner is " + self.state.players[self.state.starting_player_index])
-        #print("Current round results:" + str(self.state.current_round))
+    
+    def print_throw_round(self, round: RoundRecord):
+        throw_num = round.get_lowest_throw_num()
+        print(f"{throw_num} cards thrown.")
+        for throw in round.turns:
+            print(f"Player {throw.player} wants to throw {throw.throw_count} cards.")
+        if throw_num > 0:
+            for throw in round.turns:
+                print(f"Player {throw.player} throws these cards: {throw.thrown_cards}")
+                #print(f"Player {throw.player0} gets these cards back:")
+        else:
+            print("None cards thrown.")
+            print("Play phase initiated.")
+            
+            
+    def print_play_round(self, round: RoundRecord):
+        print(round.starting_player + " is starting player.")
+        for turn_record in round.turns:
+            print(turn_record.player + " has played this move:", turn_record.move)
+        
+    
+    def print_setup(self):
+        print("Initial game setup complete.")
+        print("The starting player is:", self.state.player_zero)
+        
+    
+    def print_game_state(self):
+        print("------------------------")
+        print("------------------------")
+        
+        print("Turn: " + str(self.state.round_index))
+        print("Gamephase: " + PHASES[str(self.state.phase)])
+        print("Hands:")
+        for player in self.state.players:
+            self.print_hand(str(player)+"'s hand:", player)
+            
         print("------------------------")
         print("------------------------")
 
-    def print_hand(self, state: GameState, prefix: str, player: list):
+    def print_hand(self, prefix: str, hand: list):
         message = [prefix]
-        hand = state.players_hands[player]
         for card in hand:
             message.append(str(card))
         print(" ".join(message))
 
-    def print_players_choice(self, state):
-        players_order = state.players[state.active_player_index:]
-        players_order.extend(state.players[:state.active_player_index])
-        for player in players_order:
-            move = state.current_round[player]
-            print(player + " has played this move:", move)
-    
-    def print_loser(self, loser_score: tuple, ties: list):
-        if ties == []:
-            loser = loser_score[0]
-            score = loser_score[1]
-            print("Game is over")
-            print(loser + " lost, with a score of " + str(score))
-        elif ties != []:
+
+    def print_loser(self):
+        print("Game is over")
+        if len(self.state.losers) == 1:
+            print(self.state.losers[0] + " lost, with a score of " + str(self.state.highest_score))
+        else:
             print("It's a tie!")
-            print("These players tied: " + str(ties))
+            print("These players tied: " + str(self.state.losers))
