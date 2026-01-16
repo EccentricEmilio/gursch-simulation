@@ -29,10 +29,10 @@ class TerminalUI:
     
     def print_throw_round(self, round: RoundRecord):
         throw_num = round.get_lowest_throw_num()
-        print(f"{throw_num} cards thrown.")
         for throw in round.turns:
             print(f"Player {throw.player} wants to throw {throw.throw_count} cards.")
-        if throw_num > 0:
+        if round.turns[0].thrown_cards != []:
+            print(f"{throw_num} cards thrown.")
             for throw in round.turns:
                 print(f"Player {throw.player} throws these cards: {throw.thrown_cards}")
                 #print(f"Player {throw.player0} gets these cards back:")

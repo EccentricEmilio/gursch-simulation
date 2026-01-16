@@ -47,8 +47,6 @@ class GameEngine:
         throw_amounts = self.determine_throw_amounts()
         lowest_throw = min(throw_amounts)
         execute_throw = lowest_throw > 0
-        if not execute_throw:
-            self.state.phase += 1
         
         self.state.current_round = RoundRecord(
             self.state.round_index, 
@@ -56,15 +54,17 @@ class GameEngine:
             [],
             self.state.players_hands
         )
-        
+
+        if not self.check_deck(lowest_throw * self.state.player_count):
+            execute_throw = False
         for i, p in enumerate(self.state.players):
             p_throw_amount = throw_amounts[i]
-            
             thrown_cards = []
-            if execute_throw:
+            
+            if execute_throw:        
                 thrown_cards = self.get_throw_cards(lowest_throw, p)
                 self.swap_cards(thrown_cards, p)
-            
+                
             record = ThrowRecord(
                 p,
                 p_throw_amount,
@@ -72,6 +72,8 @@ class GameEngine:
             )
             
             self.state.current_round.turns.append(record)
+        if not execute_throw:
+            self.state.phase = PLAY_PHASE
         self.state.round_index += 1
         self.state.board.append(self.state.current_round)
     
@@ -79,15 +81,20 @@ class GameEngine:
     def swap_cards(self, swap_cards: list[Card], player: str):
         # Swap X amount of cards
         # swap_cards is cards in hand designated to be swapped
-        swap_card_abbrev = [c.abbrev for c in swap_cards]
         new_cards = self.state.return_cards(len(swap_cards))
+        if new_cards == None:
+            self.state.phase = PLAY_PHASE
+            return False
+        
         hand = self.state.players_hands[player]
         # BUG, here we need to check cards equality based on suit and value
         # not just value, otherwise mulitiples of same values get removed
         # FIXED
+        swap_card_abbrev = [c.abbrev for c in swap_cards]
         remaining_cards = [card for card in hand if card.abbrev not in swap_card_abbrev]
         new_hand = new_cards + remaining_cards
         self.state.players_hands[player] = new_hand
+        return True 
     
     
     def determine_throw_amounts(self) -> list[int]:
@@ -273,3 +280,6 @@ class GameEngine:
         # Swap all five, only allowed once at the beginning of the game
         new_cards = self.state.return_cards(5)
         self.state.players_hands[player] = new_cards
+    
+    def check_deck(self, amount: int):
+        return amount <= len(self.state.deck)

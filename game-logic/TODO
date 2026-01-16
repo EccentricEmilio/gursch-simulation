@@ -1,9 +1,6 @@
 1. COMPLETE game engine
 - Add first phase
 - Add that player_zero gets to get a free choice
-    - Fix current_turn to add turn_index and for first phase
-        So that ui can print info
-        FIGURE OUT A CLEAN AND EASY WAY TO STORE INFO ABOUT GAME
 - Add mini gursch, in some 
 - Add handling for sevens
 

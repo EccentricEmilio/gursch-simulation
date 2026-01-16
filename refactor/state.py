@@ -73,7 +73,7 @@ class RoundRecord:
             self.type = "throw"
         elif game_phase == 2:
             self.type = "play"
-        self.players_hands = deepcopy(players_hands)
+        self.players_hands = {p: list(h) for p, h in players_hands.items()}
         self.starting_player = starting_player
     
     def __repr__(self):
@@ -107,16 +107,17 @@ class ThrowRecord:
 
 class GameState:
     def __init__(self, player_count, settings: dict):
-        self.update = False 
         self.settings = settings
         self.round_index = 0
         self.player_count = player_count
+        if self.player_count * self.settings["hand_size"] > 52:
+            raise ValueError
         self.board = []
         self.phase = SETUP_PHASE
-        self.throw_amount = 1
         self.current_round: RoundRecord = None
         
         self.deck = pydealer.Deck() 
+        self.deck_empty = False
         self.deck.shuffle()
         
         self.highest_score = -1
@@ -125,19 +126,19 @@ class GameState:
         self.players = PLAYER_NAMES[0:self.player_count]
         self.players_hands = {p: [] for p in self.players} 
         self.player_zero = None
-        self.active_player_index = None
         
     
     def is_game(self):
         return self.phase != GAMEOVER_PHASE
 
-    def return_cards(self, amount: int) -> list:
+    def return_cards(self, amount: int) -> list[Card] | None:
         if len(self.deck) < amount:
-            raise ValueError
+            return None
+        
         card_stack = self.deck.deal(amount)
-        new_card_stack = [Card(VALUE_MAP[c.value], c.suit) for c in card_stack.cards]
-        return new_card_stack
-    
+        return [Card(VALUE_MAP[c.value], c.suit) for c in card_stack.cards]
+
+
     def deal_initial_hands(self):
         self.players_hands = {p: self.return_cards(self.settings["hand_size"]) for p in self.players}
             
