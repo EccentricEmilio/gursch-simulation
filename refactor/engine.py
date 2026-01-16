@@ -36,7 +36,7 @@ class GameEngine:
                     winner_value = int_value
         self.state.player_zero = winner
         self.state.phase += 1
-
+        
 
     def process_throw_round(self):
         '''       
@@ -46,6 +46,9 @@ class GameEngine:
         '''
         throw_amounts = self.determine_throw_amounts()
         lowest_throw = min(throw_amounts)
+        if self.state.round_index == 0:
+            player_zero_index = self.state.players.index(self.state.player_zero)
+            lowest_throw = throw_amounts[player_zero_index]
         execute_throw = lowest_throw > 0
         
         self.state.current_round = RoundRecord(

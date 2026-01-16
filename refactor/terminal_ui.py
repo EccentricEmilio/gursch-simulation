@@ -31,6 +31,10 @@ class TerminalUI:
         throw_num = round.get_lowest_throw_num()
         for throw in round.turns:
             print(f"Player {throw.player} wants to throw {throw.throw_count} cards.")
+        if round.index == 0:
+            print("Player zero gets to choose, which is " + self.state.player_zero)
+            player_zero_index = self.state.players.index(self.state.player_zero)
+            throw_num = round.turns[player_zero_index].throw_count
         if round.turns[0].thrown_cards != []:
             print(f"{throw_num} cards thrown.")
             for throw in round.turns:
