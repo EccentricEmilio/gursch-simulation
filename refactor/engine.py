@@ -39,11 +39,6 @@ class GameEngine:
         
 
     def process_throw_round(self):
-        '''       
-        Docstring for process_throw_round
-        
-        :param self: Description
-        '''
         throw_amounts = self.determine_throw_amounts()
         lowest_throw = min(throw_amounts)
         if self.state.round_index == 0:

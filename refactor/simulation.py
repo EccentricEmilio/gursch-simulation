@@ -10,15 +10,9 @@ class Simulation:
         self.policies = policies
         self.settings = deepcopy(default_settings)
 
-    def run_several_sim(self, count, player_count):
-        scores = []
-        for i in range(count):
-            result: GameResult = self.run_sim(player_count)
-            scores.append(result.highest_score)
-        scores = np.array(scores)
-        scores_mean = np.mean(scores)
-        return scores_mean
-            
+    def run_several_sim(self, count, player_count) -> list[GameResult]:
+        results = [self.run_sim(player_count) for i in range(count)]
+        return results   
         
 
     def run_sim(self, player_count: int) -> GameResult:
