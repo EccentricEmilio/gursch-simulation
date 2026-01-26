@@ -1,0 +1,12 @@
+Sevens work like this:
+In lead moves, sevens are allowed to be combined with other cards, and in this case the take on the value of the card that it is combined with. However, sevens are only allowed to be combined with one card type at a time. Examples: 
+Allowed Moves:
+[7, 7 ,A] -> the same as -> [A, A, A]
+[7, 4, 4] -> the same as -> [4, 4, 4]
+Not allowed moves:
+[7, 4, 3]
+When counting scores, sevens are worth seven.
+
+In response moves, sevens are always allowed, as they can take on the value of an ace. 
+
+When counting score of final move, if seven has been used as in the lead move, combined with one other card value, they take on the value of that value. Otherwise, they are worth seven.

@@ -166,14 +166,6 @@ class GameEngine:
         
         
     def end_round(self):
-        '''
-        if self.state.current_round.type == "throw":
-            if self.state.current_round.get_lowest_throw_num( ) == 0:
-                # Someone said 0
-                self.return_starting_player(self.state.current_round.turns)
-        elif self.state.current_round.type == "play":
-            self.return_starting_player()
-        '''
         self.state.round_index += 1
         if self.state.players_hands[self.state.player_zero] == []:
             self.state.phase += 1
@@ -181,12 +173,31 @@ class GameEngine:
     def calculate_losers(self):
         round = self.state.board[-1]
         turns = round.turns
+        scores_by_player = {}
         
-        scores_by_player = {
-            turn.player: turn.move.score
-            for turn in turns
-        }
-        
+        for turn in turns:
+            move = turn.move
+            cards = move.cards
+            
+            sevens = [c for c in cards if c.value == "7"]
+            non_sevens = [c for c in cards if c.value != "7"]
+            
+            # Default score
+            score = move.score
+            
+            if sevens and not non_sevens:
+                # Only sevens
+                # Nothing needs to be done
+                pass
+            elif sevens and non_sevens:
+                # sevens and non_sevens
+                score = non_sevens[0].int_value  * len(cards)
+            elif not sevens and non_sevens:
+                # No sevens, nothing needs to be done.
+                pass
+            
+            scores_by_player[turn.player] = score
+                    
         highest_score = max(scores_by_player.values())
         
         losers = [
@@ -200,15 +211,14 @@ class GameEngine:
 # ---------------------------- RULES ------------------------------------
     def is_legal_lead(self, move: Move) -> bool:
         # Check is move contains only duplicates
-        values = {c.value for c in move.cards}
-        if len(values) != 1:
-            return False
-        # Move is legal
-        return True
+        non_sevens = {c.value for c in move.cards if c.value != "7"}
+        return len(non_sevens) <= 1
     
     def is_legal_response(self, move: Move, lead_move: Move, player: str) -> bool:
         # Check for matching value or lowest card
         lead_value = lead_move[0].int_value
+        if lead_value == 7:
+            lead_value = 14
         
         hand_sorted = sorted(
             self.state.players_hands[player],
@@ -240,7 +250,7 @@ class GameEngine:
             return False
 
         # 2. First player rules
-        if self.state.current_round.turns == []:
+        if self.state.current_round.starting_player == player:
             return self.is_legal_lead(move)
 
         # 3. Response rules

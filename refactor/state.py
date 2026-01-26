@@ -1,8 +1,6 @@
 from functools import total_ordering
 import pydealer 
 from constants import *
-from typing import Tuple, Any
-from copy import deepcopy
 
 @total_ordering
 class Card:
@@ -41,6 +39,25 @@ class Move:
         self.cards = tuple(cards)
         self.score = sum(self.cards)
         
+    def return_true_score(self) -> int:
+        sevens = [c for c in self.cards if c.value == "7"]
+        non_sevens = [c for c in self.cards if c.value != "7"]
+        
+        # Default score
+        score = self.score
+        
+        if sevens and not non_sevens:
+            # Only sevens
+            # Nothing needs to be done
+            pass
+        elif sevens and non_sevens:
+            # sevens and non_sevens
+            score = non_sevens[0].int_value  * len(self.cards)
+        elif not sevens and non_sevens:
+            # No sevens, nothing needs to be done.
+            pass    
+        return score
+    
     def __getitem__(self, index):
         return self.cards[index]
 
@@ -156,3 +173,10 @@ class GameResult:
     
     def print_stats(self):
         pass
+    
+    
+    
+    
+    
+#move = Move([Card("7", "H"), Card("7","S"), Card("7","S"), Card("7","H"), Card("T","C")])
+#print(move.return_true_score())
