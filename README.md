@@ -70,5 +70,26 @@ Optional:
 
 ---
 
+## Game Flow
+
+1. Setup Phase
+   - deal_initial_hands
+   - choose starting player
+
+2. Throw Phase
+   - determine_throw_amounts
+   - swap_cards
+
+3. Play Phase
+   - start_round
+   - play_rounds
+   - apply_move
+   - rule validation
+
+4. End
+   - calculate_losers
+
+---
+
 **One-line summary:**  
 *A simulation-first Python card game engine designed for AI training and statistical analysis, with UI as an optional visualization layer.*

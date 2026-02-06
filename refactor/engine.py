@@ -227,6 +227,8 @@ class GameEngine:
         allowed_low_cards = hand_sorted[:low_count]
         
         for card in move.cards:
+            if card.int_value == 7:
+                continue
             if card.int_value >= lead_value:
                 continue
             if card in allowed_low_cards:
