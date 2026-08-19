@@ -10,3 +10,5 @@ When counting scores, sevens are worth seven.
 In response moves, sevens are always allowed, as they can take on the value of an ace. 
 
 When counting score of final move, if seven has been used as in the lead move, combined with one other card value, they take on the value of that value. Otherwise, they are worth seven.
+
+https://allakortspel.se/gurka/

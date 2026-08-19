@@ -49,9 +49,10 @@ POKER_VALUES = {
 
 # Default game settings
 DEFAULT_SETTINGS = {
-    "hand_size": 5,
+    "hand_size": 3,
     "response_requires_duplicates": False,
     "joker_amount_in_deck": 0,
+    "throw_phase_enabled": False,
 }
 
 # Player names
