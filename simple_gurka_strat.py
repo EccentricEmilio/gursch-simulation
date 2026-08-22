@@ -223,9 +223,18 @@ index shows which player it is
 
 FULL_DECK = list(range(1, 14)) * 4
 
-def terminal(state) -> bool:
+def is_terminal(state: State) -> bool:
     '''
-    If the game is people with only 2 cards in their hands, we can say that the game is solved
+    Return 1 if all hands are only 1 card and state.played == 0
+    '''
+    return (
+        all([(len(hand) == 1) for hand in state.hands]) 
+        and state.played_this_round == 0
+    )    
+
+def is_evaluable(state) -> bool:
+    '''
+    If the game has people with only 2 cards in their hands, we can say that the game is solved
     since every person knows what card to play.
     '''
     if all([len(hand)==2 for hand in state.hands]):
@@ -233,34 +242,47 @@ def terminal(state) -> bool:
     else:
         return False
 
-def terminal(state) -> bool:
-    '''
-    If the game is people with only 2 cards in their hands, we can say that the game is solved
-    since every person knows what card to play.
-    '''
-    if all([len(hand)==2 for hand in state.hands]):
-        return True
-    else:
-        return False
 
-
-def simulate_endgame(state) -> list[float]:
+def simulate_evaluable_game(state) -> list[float]:
     '''
     It takes in a state where every player has 2 cards.
     This function returns which players lost
     Winners get 1, drawers get 0.5, losers get 0
     '''
+    loser_point = 0.0
+    draw_point = 0.5
+    winner_point = 1.0
+
     end_state = deepcopy(state)
-    game_over = False  
+    result = []
 
     move = max(end_state.hands[end_state.current_player])
     end_state = play_card(end_state, move)
 
-    while not game_over:
+    while not is_terminal(end_state):
         moves = legal_moves(end_state)
         end_state = play_card(end_state, max(moves))
-        
 
+    # Check for draws
+    flat_hands = [hand[0] for hand in end_state.hands]
+
+    max_value = max(flat_hands)
+
+    if end_state.hands.count(max_value) > 1:
+        for hand in end_state.hands:
+            card = hand[0]
+            if card < max_value:
+                result.append(winner_point)
+            elif card == max_value:
+                result.append(draw_point)
+    else:
+        for hand in end_state.hands:
+            card = hand[0]
+            if card < max_value:
+                result.append(winner_point)
+            elif card == max_value:
+                result.append(loser_point)
+    return result
 
 
 def legal_moves(state: State) -> list[int]:
@@ -271,7 +293,7 @@ def legal_moves(state: State) -> list[int]:
         return moves
     else:
         if max(state.hands[state.current_player]) > state.highest_value:
-            moves = [c for c in state.hands if c > state.highest_value]
+            moves = [c for c in state.hands[state.current_player] if c > state.highest_value]
         else:
             moves = [min(state.hands[state.current_player])]
     return moves
@@ -285,12 +307,12 @@ def play_card(state: State, move: int) -> State:
     '''
     next_state = deepcopy(state)
 
-    next_state.hands[state.current_player].remove(move)
+    next_state.hands[next_state.current_player].remove(move)
 
     if move > next_state.highest_value:
         # Update value and assign new eventual winner
         next_state.highest_value = move
-        next_state.round_winner = state.current_player
+        next_state.round_winner = next_state.current_player
 
 
     next_state.played_this_round += 1
@@ -305,6 +327,7 @@ def play_card(state: State, move: int) -> State:
         # Reset game for new round
         next_state.highest_value = -1
         next_state.round_winner = -1
+        next_state.played_this_round = 0
     else:
         # Another player shall play
 
@@ -427,10 +450,10 @@ state = State(
     played_this_round=0,
 )
 
-moves = legal_moves(state)
-
-scores = {
-    move: 0
-    for move in moves
-}
-print(scores)
+while not is_evaluable(state):
+    moves = legal_moves(state)
+    max_move = max(moves)
+    print(f"{state.current_player} played: {max_move}" )
+    state = play_card(state, max_move)
+    print(state)
+print(simulate_evaluable_game(state))
