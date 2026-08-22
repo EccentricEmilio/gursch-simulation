@@ -205,8 +205,8 @@ print(point_list)
 class State:
     hands: list
     current_player: int # index of hands
-    value: int # value to match
-    round_winner: int | None # not currently used
+    highest_value: int # value to match, -1 means start of round
+    round_winner: int  # Eventual round winner, -1 means start of round
     played_this_round: int 
     # amount of cards that has been played this round
 
@@ -224,65 +224,95 @@ index shows which player it is
 FULL_DECK = list(range(1, 14)) * 4
 
 def terminal(state) -> bool:
-    # Return 1 if all hands are only 1 card and state.played == 0
-    return (
-        all([(len(hand) == 1) for hand in state.hands]) 
-        and state.played == 0
-    )    
-
-def final_round_result(state) -> float:
     '''
-    This function always returns the final_result based on
-    the root_player's perspective.
+    If the game is people with only 2 cards in their hands, we can say that the game is solved
+    since every person knows what card to play.
     '''
-    flat_hands = []
-    for hand in state.hands:
-        for card in hand:
-            flat_hands.append(card)
-    max_value = max(flat_hands)
-    if max_value.count() > 1:
-        # Draw
-        if flat_hands[0] == max_value:
-            # player was in draw
-            result = 0.5 
-        else:
-            # player won
-            result = 1.0
+    if all([len(hand)==2 for hand in state.hands]):
+        return True
     else:
-        if flat_hands[0] == max_value:
-            result =  0.0
-        else:
-            result = 1.0
+        return False
 
-    return result
+def terminal(state) -> bool:
+    '''
+    If the game is people with only 2 cards in their hands, we can say that the game is solved
+    since every person knows what card to play.
+    '''
+    if all([len(hand)==2 for hand in state.hands]):
+        return True
+    else:
+        return False
 
 
-def legal_moves(state) -> list[int]:
+def simulate_endgame(state) -> list[float]:
+    '''
+    It takes in a state where every player has 2 cards.
+    This function returns which players lost
+    Winners get 1, drawers get 0.5, losers get 0
+    '''
+    end_state = deepcopy(state)
+    game_over = False  
+
+    move = max(end_state.hands[end_state.current_player])
+    end_state = play_card(end_state, move)
+
+    while not game_over:
+        moves = legal_moves(end_state)
+        end_state = play_card(end_state, max(moves))
+        
+
+
+
+def legal_moves(state: State) -> list[int]:
     moves = []
     if state.played_this_round == 0:
         for card in state.hands[state.current_player]:
             moves.append(card)
         return moves
     else:
-        if max(state.hands[state.current_player]) > state.value:
-            moves = [c for c in state.hand if c > state.value]
+        if max(state.hands[state.current_player]) > state.highest_value:
+            moves = [c for c in state.hands if c > state.highest_value]
         else:
             moves = [min(state.hands[state.current_player])]
     return moves
 
 
 def play_card(state: State, move: int) -> State:
+    '''
+    Remove move from current_player's hand
+    Update .value
+    Increment .current_player and .played_this_round
+    '''
     next_state = deepcopy(state)
 
-    
     next_state.hands[state.current_player].remove(move)
 
-    if next_state.current_player >= (len(next_state.hands)-1):
-        next_state.current_player = 0
-        next_state.played_this_round = 0
+    if move > next_state.highest_value:
+        # Update value and assign new eventual winner
+        next_state.highest_value = move
+        next_state.round_winner = state.current_player
+
+
+    next_state.played_this_round += 1
+
+    if next_state.played_this_round >= len(next_state.hands):
+        # Last player has played
+        # The person which played the highest value this round
+        # shall be the new .current_player
+
+        next_state.current_player = next_state.round_winner
+
+        # Reset game for new round
+        next_state.highest_value = -1
+        next_state.round_winner = -1
     else:
-        next_state.current_player += 1
-        next_state.played_this_round += 1
+        # Another player shall play
+
+        # Increment .current_player
+        if next_state.current_player >= (len(next_state.hands)-1):
+            next_state.current_player = 0
+        else:
+            next_state.current_player += 1
 
     return next_state
     
@@ -335,7 +365,7 @@ def minimax(state, root_player) -> float |  list:
 
 
 
-def choose_move(my_hand, known_cards, game_state, num_players):
+def choose_move(my_hand, known_cards, game_state: State, num_players):
 
     moves = set(legal_moves(game_state))
     # set() to remove duplicates,
@@ -360,7 +390,7 @@ def choose_move(my_hand, known_cards, game_state, num_players):
         state = State(
             hands=hands,
             current_player=game_state.current_player,
-            value=game_state.value,
+            highest_value=game_state.highest_value,
             round_winner=game_state.round_winner,
             played_this_round=game_state.played_this_round
         )
@@ -392,8 +422,8 @@ state = State(
         [2, 9, 13]
     ],
     current_player=0,
-    value=0,
-    round_winner=None,
+    highest_value=-1,
+    round_winner=-1,
     played_this_round=0,
 )
 
