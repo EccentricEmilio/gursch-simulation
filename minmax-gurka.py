@@ -21,7 +21,9 @@ function minimax(position, depth, maximizingPlayer)
  
  
 // initial call
-minimax(currentPosition, 3, true)function minimax(position, depth, maximizingPlayer)
+minimax(currentPosition, 3, true)
+
+function minimax(position, depth, maximizingPlayer)
 	if depth == 0 or game over in position
 		return static evaluation of position
  
@@ -45,7 +47,9 @@ minimax(currentPosition, 3, true)
 '''
 
 
-
+'''
+Player 0 is maximizing
+'''
 
 import random
 from dataclasses import dataclass
@@ -73,7 +77,7 @@ def is_terminal(state: State) -> bool:
     )    
 
 
-def is_evaluable(state) -> bool:
+def is_evaluable(state: State) -> bool:
     '''
     If the game has people with only 2 cards in their hands, we can say that the game is solved
     since every person knows what card to play.
@@ -84,18 +88,15 @@ def is_evaluable(state) -> bool:
         return False
 
 
-def simulate_evaluable_game(state) -> list[float]:
+def simulate_evaluable_game(state: State) -> int:
     '''
     It takes in a state where every player has 2 cards.
-    This function returns which players lost
-    Winners get 1, drawers get 0.5, losers get 0
+    This function returns a int
+    -1 means player 0 won (hands[0])
+    0 means a draw 
+    1 means player 1 won 
     '''
-    loser_point = 0.0
-    draw_point = 0.5
-    winner_point = 1.0
-
     end_state = deepcopy(state)
-    result = []
 
     move = max(end_state.hands[end_state.current_player])
     end_state = play_card(end_state, move)
@@ -109,21 +110,17 @@ def simulate_evaluable_game(state) -> list[float]:
 
     max_value = max(flat_hands)
 
-    if end_state.hands.count(max_value) > 1:
-        for hand in end_state.hands:
-            card = hand[0]
-            if card < max_value:
-                result.append(winner_point)
-            elif card == max_value:
-                result.append(draw_point)
+    if flat_hands[0] < max_value:
+        # Player 0 won
+        return -1
+        
+    elif flat_hands[1] < max_value:
+        # Player 1 won
+        return 1
+    
     else:
-        for hand in end_state.hands:
-            card = hand[0]
-            if card < max_value:
-                result.append(winner_point)
-            elif card == max_value:
-                result.append(loser_point)
-    return result
+        # Draw
+        return 0
 
 
 def legal_moves(state: State) -> list[int]:
@@ -204,28 +201,26 @@ def determinize(my_hand, known_cards, num_players):
     return hands
 
 
-def minimax(state, root_player) -> float |  list:
+def minimax(state: State, maximizing_player: bool) -> int:
+    if is_evaluable(state):
+        return simulate_evaluable_game(state)
 
-    if terminal(state):
-        result = final_round_result(state)
-        return result 
-    
+    if maximizing_player:
+        max_Eval = -100
+        for card in state.hands[0]:
+            child_state = play_card(state, card)
+            eval = minimax(child_state, False)
+            max_Eval = max(max_Eval, eval)
+        return max_Eval
 
-    moves = legal_moves(state)
-
-    results = []
-
-    for move in moves:
-        next_state = play_card(state, move)
-
-        value = minimax(next_state, root_player)
-
-        results.append(value)
-
-    if state.current_player == root_player:
-        return max(results)
     else:
-        return min(results)
+        min_Eval = 100
+        for card in state.hands[1]:
+            child_state = play_card(state, card)
+            eval = minimax(child_state, True)
+            min_Eval = min(min_Eval, eval)
+        return min_Eval
+            
 
 
 def choose_move(my_hand, known_cards, game_state: State, num_players):
