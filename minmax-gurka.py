@@ -28,16 +28,27 @@ function minimax(position, depth, maximizingPlayer)
 		return static evaluation of position
  
 	if maximizingPlayer
-		maxEval = -infinity
+		maxEval = -infinity 
 		for each child of position
-			eval = minimax(child, depth - 1, false)
-			maxEval = max(maxEval, eval)
+            runningEval = []
+            for i in 1000:
+                determinize(child.enemyHand)
+			    eval = minimax(child, depth - 1, false)
+                runningEval.append(eval)
+            averageEval = average(runningEval)
+
+			maxEval = max(maxEval, averageEval)
 		return maxEval
  
 	else
 		minEval = +infinity
 		for each child of position
-			eval = minimax(child, depth - 1, true)
+            runningEval = []
+            for i in 1000:
+                determinize(child.enemyHand)
+                eval = minimax(child, depth - 1, true)
+                runningEval.append(eval)
+            averageEval = average(runningEval)
 			minEval = min(minEval, eval)
 		return minEval
  
@@ -51,11 +62,13 @@ minimax(currentPosition, 3, true)
 Player 0 is maximizing
 '''
 
-import random
+from statistics import mean
+from random import shuffle
 from dataclasses import dataclass
 from copy import deepcopy
 
-FULL_DECK = list(range(1, 14)) * 4
+FULL_DECK = list(range(1, 15)) * 4
+SIMULATIONS = 100
 
 @dataclass
 class State:
@@ -63,8 +76,8 @@ class State:
     current_player: int # index of hands
     highest_value: int # value to match, -1 means start of round
     round_winner: int  # Eventual round winner, -1 means start of round
-    played_this_round: int 
-    # amount of cards that has been played this round
+    played_this_round: int # amount of cards that has been played this round
+    played_cards: list # cards that have been played
 
 
 def is_terminal(state: State) -> bool:
@@ -126,9 +139,7 @@ def simulate_evaluable_game(state: State) -> int:
 def legal_moves(state: State) -> list[int]:
     moves = []
     if state.played_this_round == 0:
-        for card in state.hands[state.current_player]:
-            moves.append(card)
-        return moves
+        moves = deepcopy(state.hands[state.current_player])
     else:
         if max(state.hands[state.current_player]) > state.highest_value:
             moves = [c for c in state.hands[state.current_player] if c > state.highest_value]
@@ -146,6 +157,7 @@ def play_card(state: State, move: int) -> State:
     next_state = deepcopy(state)
 
     next_state.hands[next_state.current_player].remove(move)
+    next_state.played_cards.append(move)
 
     if move > next_state.highest_value:
         # Update value and assign new eventual winner
@@ -178,27 +190,23 @@ def play_card(state: State, move: int) -> State:
     return next_state
 
 
-def determinize(my_hand, known_cards, num_players):
+def determinize(own_hand: list, known_cards: list, length) -> list[int]:
+    '''
+    Determinized_index is the index of which hand to determinize
+    '''
 
     unknown = FULL_DECK.copy()
 
-    for card in my_hand + known_cards:
+    for card in own_hand:
         unknown.remove(card)
 
-    random.shuffle(unknown)
 
-    hands = [my_hand[:]]
+    for card in known_cards:
+        unknown.remove(card)
 
-    cards_per_opponent = len(my_hand)
-
-    index = 0
-
-    for _ in range(num_players - 1):
-        hand = unknown[index:index + cards_per_opponent]
-        hands.append(hand)
-        index += cards_per_opponent
-
-    return hands
+    shuffle(unknown)
+    return unknown[:length]
+    
 
 
 def minimax(state: State, maximizing_player: bool) -> int:
@@ -208,17 +216,39 @@ def minimax(state: State, maximizing_player: bool) -> int:
     if maximizing_player:
         max_Eval = -100
         for card in state.hands[0]:
+            running_eval = []
             child_state = play_card(state, card)
-            eval = minimax(child_state, False)
-            max_Eval = max(max_Eval, eval)
+            # Here we determinize and calculate average for the card
+            for i in range(SIMULATIONS):
+                determinized_state = deepcopy(child_state)
+                determinized_state.hands[1] = determinize(
+                    child_state.hands[0], 
+                    child_state.played_cards,
+                    len(child_state.hands[1])
+                )
+                eval = minimax(determinized_state, False)
+                running_eval.append(eval)
+            mean_eval = mean(running_eval)
+            max_Eval = max(max_Eval, mean_eval)
         return max_Eval
 
     else:
         min_Eval = 100
         for card in state.hands[1]:
+            running_eval = []
             child_state = play_card(state, card)
-            eval = minimax(child_state, True)
-            min_Eval = min(min_Eval, eval)
+
+            for i in range(SIMULATIONS):
+                determinized_state = deepcopy(child_state)
+                determinized_state.hands[0] = determinize(
+                    child_state.hands[1], 
+                    child_state.played_cards,
+                    len(child_state.hands[0])
+                )
+                eval = minimax(child_state, True)
+                running_eval.append(eval)
+            mean_eval = mean(running_eval)
+            min_Eval = min(min_Eval, mean_eval)
         return min_Eval
             
 
@@ -250,7 +280,8 @@ def choose_move(my_hand, known_cards, game_state: State, num_players):
             current_player=game_state.current_player,
             highest_value=game_state.highest_value,
             round_winner=game_state.round_winner,
-            played_this_round=game_state.played_this_round
+            played_this_round=game_state.played_this_round,
+            played_cards=game_state.played_cards
         )
 
         for move in moves:
@@ -268,3 +299,19 @@ def choose_move(my_hand, known_cards, game_state: State, num_players):
         scores,
         key=scores.get
     )
+
+
+state = State(
+    hands=[
+        [2, 14, 14],
+        [-1, -1, -1]
+    ],
+    current_player=0,
+    highest_value=-1,
+    round_winner=-1,
+    played_this_round=0,
+    played_cards=[]
+)
+
+eval = minimax(state, True)
+print(eval)
