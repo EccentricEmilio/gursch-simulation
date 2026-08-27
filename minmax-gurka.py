@@ -68,7 +68,9 @@ from dataclasses import dataclass
 from copy import deepcopy
 
 FULL_DECK = list(range(1, 15)) * 4
-SIMULATIONS = 100
+SIMULATIONS = 500
+
+totalt = 500 * 3
 
 @dataclass
 class State:
@@ -209,13 +211,14 @@ def determinize(own_hand: list, known_cards: list, length) -> list[int]:
     
 
 
-def minimax(state: State, maximizing_player: bool) -> int:
+def minimax(state: State, maximizing_player: bool) -> float:
     if is_evaluable(state):
         return simulate_evaluable_game(state)
 
     if maximizing_player:
         max_Eval = -100
-        for card in state.hands[0]:
+
+        for card in legal_moves(state):
             running_eval = []
             child_state = play_card(state, card)
             # Here we determinize and calculate average for the card
@@ -234,7 +237,7 @@ def minimax(state: State, maximizing_player: bool) -> int:
 
     else:
         min_Eval = 100
-        for card in state.hands[1]:
+        for card in legal_moves(state):
             running_eval = []
             child_state = play_card(state, card)
 
@@ -245,7 +248,7 @@ def minimax(state: State, maximizing_player: bool) -> int:
                     child_state.played_cards,
                     len(child_state.hands[0])
                 )
-                eval = minimax(child_state, True)
+                eval = minimax(determinized_state, True)
                 running_eval.append(eval)
             mean_eval = mean(running_eval)
             min_Eval = min(min_Eval, mean_eval)
@@ -253,57 +256,46 @@ def minimax(state: State, maximizing_player: bool) -> int:
             
 
 
-def choose_move(my_hand, known_cards, game_state: State, num_players):
+def choose_move(state: State):
+    '''
+    Assumes current_player == 0
+    and hands is formatted like this:
+    hands=[
+        [int, int, int],
+        [-1, -1, -1]
+    ]
+    '''
+    
 
-    moves = set(legal_moves(game_state))
-    # set() to remove duplicates,
-    # since it doesnt matter which duplicate you choose
-
+    moves = legal_moves(state)
     scores = {
         move: 0
         for move in moves
     }
-    print(scores)
 
-    simulations = 10000
+    count = 0
 
-    for _ in range(simulations):
-
-        hands = determinize(
-            my_hand,
-            known_cards,
-            num_players
-        )
-
-        state = State(
-            hands=hands,
-            current_player=game_state.current_player,
-            highest_value=game_state.highest_value,
-            round_winner=game_state.round_winner,
-            played_this_round=game_state.played_this_round,
-            played_cards=game_state.played_cards
-        )
-
-        for move in moves:
-
-            next_state = play_card(state, move)
-
-            value = minimax(
-                next_state,
-                root_player=0
+    for move in scores:
+        running_eval = []
+        child_state = play_card(state, move)
+        for i in range(SIMULATIONS):
+            count += 1
+            print(count)
+            determinized_state = deepcopy(child_state)
+            determinized_state.hands[1] = determinize(
+                child_state.hands[0], 
+                child_state.played_cards,
+                len(child_state.hands[1])
             )
-
-            scores[move] += value
-
-    return max(
-        scores,
-        key=scores.get
-    )
-
+            eval = minimax(determinized_state, False)
+            running_eval.append(eval)
+        mean_eval = mean(running_eval)
+        scores[move] += mean_eval
+    return scores
 
 state = State(
     hands=[
-        [2, 14, 14],
+        [2, 13, 14],
         [-1, -1, -1]
     ],
     current_player=0,
@@ -313,5 +305,8 @@ state = State(
     played_cards=[]
 )
 
+#scores = choose_move(state)
+#print(scores)
 eval = minimax(state, True)
 print(eval)
+
