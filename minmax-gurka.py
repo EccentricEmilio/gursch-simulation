@@ -67,14 +67,21 @@ from random import shuffle
 from dataclasses import dataclass
 from copy import deepcopy
 
-FULL_DECK = list(range(1, 15)) * 4
-SIMULATIONS = 500
+FULL_DECK = list(range(2, 15)) * 4
+SIMULATIONS = 50
+ALL_CARDS  = set(range(2, 15))
+DEFAULT_HAND_INFO = [
+    ALL_CARDS,
+    ALL_CARDS
+]
+COUNT = 0
 
 totalt = 500 * 3
 
 @dataclass
 class State:
     hands: list
+    hand_info: list
     current_player: int # index of hands
     highest_value: int # value to match, -1 means start of round
     round_winner: int  # Eventual round winner, -1 means start of round
@@ -157,14 +164,22 @@ def play_card(state: State, move: int) -> State:
     Increment .current_player and .played_this_round
     '''
     next_state = deepcopy(state)
-
     next_state.hands[next_state.current_player].remove(move)
     next_state.played_cards.append(move)
 
     if move > next_state.highest_value:
         # Update value and assign new eventual winner
+        # Played above value
         next_state.highest_value = move
         next_state.round_winner = next_state.current_player
+    else:
+        # Played their smallest card
+        # upper_ceiling calculates the minimum upper ceiling
+        # just because i respond to a higher value, doesnt mean i can have the value-1
+        # I must take into account what i remember from previous rounds
+        upper_ceiling = min(state.highest_value+1, max(state.hand_info[state.current_player])+1 )
+        state.hand_info[state.current_player] = set(range(move, upper_ceiling))
+
 
 
     next_state.played_this_round += 1
@@ -192,26 +207,52 @@ def play_card(state: State, move: int) -> State:
     return next_state
 
 
-def determinize(own_hand: list, known_cards: list, length) -> list[int]:
+'''
+    Determinize needs to only create hands which are possible
+    If a person has played card a against the value b
+    where a <= b, then a = min(hand) and max(hand) <= b
+    What a player knows about an opponents hand then changes every time the opponent plays a <= b
+    in the beginning, the hand looks like this: 
+    [(1 - 14), (1 - 14), (1 - 14)]
+
+    If i play 12 and they in response plays 5, the hand changes:
+    [5, (5 - 12), (5 - 12)]
+
+    Generalized:
+    If i play a and they in response plays b, the hand changes:
+    [b, (b - a), (b - a)]
+
+    We shall save a hand_info in State, that corresponds to what each player knows
+    about the other player's hand. The first item in hand_info, hand_info[0]
+    is then the publically attainable knowledge about player_0
+
+'''
+
+
+def determinize(state: State, self_index: int) -> list[int]:
     '''
-    Determinized_index is the index of which hand to determinize
     '''
+    if self_index == 0:
+        enemy_index = 1
+    else:
+        enemy_index = 0
 
-    unknown = FULL_DECK.copy()
+    hand_len = len(state.hands[enemy_index])
 
-    for card in own_hand:
-        unknown.remove(card)
+    unknown = list(state.hand_info[enemy_index]) * 4
 
-
-    for card in known_cards:
-        unknown.remove(card)
+    for card in state.hands[self_index] + state.played_cards:
+        if card in unknown:
+            unknown.remove(card)
 
     shuffle(unknown)
-    return unknown[:length]
-    
+    return unknown[:hand_len]
 
 
 def minimax(state: State, maximizing_player: bool) -> float:
+    global COUNT
+    print(COUNT)
+    COUNT += 1
     if is_evaluable(state):
         return simulate_evaluable_game(state)
 
@@ -225,9 +266,8 @@ def minimax(state: State, maximizing_player: bool) -> float:
             for i in range(SIMULATIONS):
                 determinized_state = deepcopy(child_state)
                 determinized_state.hands[1] = determinize(
-                    child_state.hands[0], 
-                    child_state.played_cards,
-                    len(child_state.hands[1])
+                    determinized_state,
+                    0
                 )
                 eval = minimax(determinized_state, False)
                 running_eval.append(eval)
@@ -244,9 +284,8 @@ def minimax(state: State, maximizing_player: bool) -> float:
             for i in range(SIMULATIONS):
                 determinized_state = deepcopy(child_state)
                 determinized_state.hands[0] = determinize(
-                    child_state.hands[1], 
-                    child_state.played_cards,
-                    len(child_state.hands[0])
+                    determinized_state,
+                    1
                 )
                 eval = minimax(determinized_state, True)
                 running_eval.append(eval)
@@ -266,7 +305,6 @@ def choose_move(state: State):
     ]
     '''
     
-
     moves = legal_moves(state)
     scores = {
         move: 0
@@ -295,9 +333,10 @@ def choose_move(state: State):
 
 state = State(
     hands=[
-        [2, 13, 14],
+        [2, 2, 2],
         [-1, -1, -1]
     ],
+    hand_info=DEFAULT_HAND_INFO,
     current_player=0,
     highest_value=-1,
     round_winner=-1,
@@ -308,5 +347,5 @@ state = State(
 #scores = choose_move(state)
 #print(scores)
 eval = minimax(state, True)
+print("finished")
 print(eval)
-
