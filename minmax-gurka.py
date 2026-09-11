@@ -24,7 +24,7 @@ function minimax(position, depth, maximizingPlayer)
 minimax(currentPosition, 3, true)
 
 function minimax(position, depth, maximizingPlayer)
-	if depth == 0 or game over in position
+	if game over in position
 		return static evaluation of position
  
 	if maximizingPlayer
@@ -57,9 +57,24 @@ function minimax(position, depth, maximizingPlayer)
 minimax(currentPosition, 3, true)
 '''
 
-
 '''
-Player 0 is maximizing
+    Determinize needs to only create hands which are possible
+    If a person has played card a against the value b
+    where a <= b, then a = min(hand) and max(hand) <= b
+    What a player knows about an opponents hand then changes every time the opponent plays a <= b
+    in the beginning, the hand looks like this: 
+    [(1 - 14), (1 - 14), (1 - 14)]
+
+    If i play 12 and they in response plays 5, the hand changes:
+    [5, (5 - 12), (5 - 12)]
+
+    Generalized:
+    If i play a and they in response plays b, the hand changes:
+    [b, (b - a), (b - a)]
+
+    We shall save a hand_info in State, that corresponds to what each player knows
+    about the other player's hand. The first item in hand_info, hand_info[0]
+    is then the publically attainable knowledge about player_0
 '''
 
 from statistics import mean
@@ -71,12 +86,10 @@ FULL_DECK = list(range(2, 15)) * 4
 SIMULATIONS = 50
 ALL_CARDS  = set(range(2, 15))
 DEFAULT_HAND_INFO = [
-    ALL_CARDS,
-    ALL_CARDS
+    ALL_CARDS.copy(),
+    ALL_CARDS.copy()
 ]
 COUNT = 0
-
-totalt = 500 * 3
 
 @dataclass
 class State:
@@ -88,62 +101,63 @@ class State:
     played_this_round: int # amount of cards that has been played this round
     played_cards: list # cards that have been played
 
+    def __str__(self):
+        return (
+            f"hands={self.hands}\n"
+            f"current_player={self.current_player}\n"
+            f"highest_value={self.highest_value}\n"
+            f"round_winner={self.round_winner}\n"
+            f"played_this_round={self.played_this_round}\n"
+            f"played_cards={self.played_cards}\n"
+            f"hand_info={self.hand_info}"
+        )
 
 def is_terminal(state: State) -> bool:
     '''
-    Return 1 if all hands are only 1 card and state.played == 0
+    Check if the state is terminal
+    Terminal means that the state is solved, every person knows what to play
     '''
-    return (
-        all([(len(hand) == 1) for hand in state.hands]) 
-        and state.played_this_round == 0
-    )    
+    hand_lengths = [len(hand) for hand in state.hands]
+    
+    if 1 in hand_lengths:
+        raise RuntimeError("Minimax went past a terminal state.")
+    
+    return all([(len==2) for len in hand_lengths])   
 
-
-def is_evaluable(state: State) -> bool:
-    '''
-    If the game has people with only 2 cards in their hands, we can say that the game is solved
-    since every person knows what card to play.
-    '''
-    if all([len(hand)==2 for hand in state.hands]):
-        return True
-    else:
-        return False
-
-
-def simulate_evaluable_game(state: State) -> int:
+def get_terminal_eval(state: State) -> float:
     '''
     It takes in a state where every player has 2 cards.
-    This function returns a int
     -1 means player 0 won (hands[0])
     0 means a draw 
     1 means player 1 won 
     '''
-    end_state = deepcopy(state)
+    if not state.played_this_round == 0:
+        raise RuntimeError
 
-    move = max(end_state.hands[end_state.current_player])
-    end_state = play_card(end_state, move)
+    # Play first move
+    state_copy = deepcopy(state)
+    move = max(legal_moves(state_copy))
+    state_copy = play_card(state_copy, move)
 
-    while not is_terminal(end_state):
-        moves = legal_moves(end_state)
-        end_state = play_card(end_state, max(moves))
+    # Every other player plays their highest card
+    while not all([len(hand)==1 for hand in state_copy.hands]):
+        state_copy = play_card(state_copy, max(legal_moves(state_copy)))
 
     # Check for draws
-    flat_hands = [hand[0] for hand in end_state.hands]
-
+    flat_hands = [hand[0] for hand in state_copy.hands]
     max_value = max(flat_hands)
 
     if flat_hands[0] < max_value:
         # Player 0 won
-        return -1
+        return 1.0
         
     elif flat_hands[1] < max_value:
         # Player 1 won
-        return 1
+        return 0.0
     
     else:
         # Draw
-        return 0
-
+        return 0.5
 
 def legal_moves(state: State) -> list[int]:
     moves = []
@@ -177,8 +191,8 @@ def play_card(state: State, move: int) -> State:
         # upper_ceiling calculates the minimum upper ceiling
         # just because i respond to a higher value, doesnt mean i can have the value-1
         # I must take into account what i remember from previous rounds
-        upper_ceiling = min(state.highest_value+1, max(state.hand_info[state.current_player])+1 )
-        state.hand_info[state.current_player] = set(range(move, upper_ceiling))
+        upper_ceiling = min(next_state.highest_value, max(next_state.hand_info[next_state.current_player]))
+        next_state.hand_info[next_state.current_player] = set(range(move, upper_ceiling+1))
 
 
 
@@ -207,28 +221,6 @@ def play_card(state: State, move: int) -> State:
     return next_state
 
 
-'''
-    Determinize needs to only create hands which are possible
-    If a person has played card a against the value b
-    where a <= b, then a = min(hand) and max(hand) <= b
-    What a player knows about an opponents hand then changes every time the opponent plays a <= b
-    in the beginning, the hand looks like this: 
-    [(1 - 14), (1 - 14), (1 - 14)]
-
-    If i play 12 and they in response plays 5, the hand changes:
-    [5, (5 - 12), (5 - 12)]
-
-    Generalized:
-    If i play a and they in response plays b, the hand changes:
-    [b, (b - a), (b - a)]
-
-    We shall save a hand_info in State, that corresponds to what each player knows
-    about the other player's hand. The first item in hand_info, hand_info[0]
-    is then the publically attainable knowledge about player_0
-
-'''
-
-
 def determinize(state: State, self_index: int) -> list[int]:
     '''
     '''
@@ -249,47 +241,53 @@ def determinize(state: State, self_index: int) -> list[int]:
     return unknown[:hand_len]
 
 
-def minimax(state: State, maximizing_player: bool) -> float:
+def minimax(state: State) -> float:
     global COUNT
-    print(COUNT)
+    #print(COUNT)
     COUNT += 1
-    if is_evaluable(state):
-        return simulate_evaluable_game(state)
+    if is_terminal(state):
+        return get_terminal_eval(state)
 
-    if maximizing_player:
+    if state.current_player == 0:
+        # Maximizing player
         max_Eval = -100
 
+        # Here we create len(legal_moves(state)) amount of child nodes
+        # The parent node is state
         for card in legal_moves(state):
             running_eval = []
             child_state = play_card(state, card)
-            # Here we determinize and calculate average for the card
-            for i in range(SIMULATIONS):
+            # Here we determinize and calculate average for the node
+            for _ in range(SIMULATIONS):
                 determinized_state = deepcopy(child_state)
                 determinized_state.hands[1] = determinize(
                     determinized_state,
                     0
                 )
-                eval = minimax(determinized_state, False)
+                eval = minimax(determinized_state)
                 running_eval.append(eval)
             mean_eval = mean(running_eval)
+            print(mean_eval)
             max_Eval = max(max_Eval, mean_eval)
         return max_Eval
 
     else:
+        # Minimizing 
         min_Eval = 100
         for card in legal_moves(state):
             running_eval = []
             child_state = play_card(state, card)
-
-            for i in range(SIMULATIONS):
+            # Here we determinize and calculate average for the card
+            for _ in range(SIMULATIONS):
                 determinized_state = deepcopy(child_state)
                 determinized_state.hands[0] = determinize(
                     determinized_state,
                     1
                 )
-                eval = minimax(determinized_state, True)
+                eval = minimax(determinized_state)
                 running_eval.append(eval)
             mean_eval = mean(running_eval)
+            print(mean_eval)
             min_Eval = min(min_Eval, mean_eval)
         return min_Eval
             
@@ -328,12 +326,17 @@ def choose_move(state: State):
             eval = minimax(determinized_state, False)
             running_eval.append(eval)
         mean_eval = mean(running_eval)
+        print(mean_eval)
         scores[move] += mean_eval
     return scores
 
+def return_random_hand(len=3):
+    shuffle(FULL_DECK)
+    return FULL_DECK[:len]
+
 state = State(
     hands=[
-        [2, 2, 2],
+        [14, 14, 2],
         [-1, -1, -1]
     ],
     hand_info=DEFAULT_HAND_INFO,
@@ -346,6 +349,6 @@ state = State(
 
 #scores = choose_move(state)
 #print(scores)
-eval = minimax(state, True)
-print("finished")
-print(eval)
+eval = minimax(state)
+print("finished", eval)
+print(state)
