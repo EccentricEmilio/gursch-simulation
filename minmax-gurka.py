@@ -78,9 +78,10 @@ minimax(currentPosition, 3, true)
 '''
 
 from statistics import mean
-from random import shuffle
-from dataclasses import dataclass
+import random
 from copy import deepcopy
+import gursh
+from gursh import State
 
 FULL_DECK = list(range(2, 15)) * 4
 SIMULATIONS = 50
@@ -90,39 +91,6 @@ DEFAULT_HAND_INFO = [
     ALL_CARDS.copy()
 ]
 COUNT = 0
-
-@dataclass
-class State:
-    hands: list
-    hand_info: list
-    current_player: int # index of hands
-    highest_value: int # value to match, -1 means start of round
-    round_winner: int  # Eventual round winner, -1 means start of round
-    played_this_round: int # amount of cards that has been played this round
-    played_cards: list # cards that have been played
-
-    def __str__(self):
-        return (
-            f"hands={self.hands}\n"
-            f"current_player={self.current_player}\n"
-            f"highest_value={self.highest_value}\n"
-            f"round_winner={self.round_winner}\n"
-            f"played_this_round={self.played_this_round}\n"
-            f"played_cards={self.played_cards}\n"
-            f"hand_info={self.hand_info}"
-        )
-
-def is_terminal(state: State) -> bool:
-    '''
-    Check if the state is terminal
-    Terminal means that the state is solved, every person knows what to play
-    '''
-    hand_lengths = [len(hand) for hand in state.hands]
-    
-    if 1 in hand_lengths:
-        raise RuntimeError("Minimax went past a terminal state.")
-    
-    return all([(len==2) for len in hand_lengths])   
 
 def get_terminal_eval(state: State) -> float:
     '''
@@ -159,68 +127,6 @@ def get_terminal_eval(state: State) -> float:
         # Draw
         return 0.5
 
-def legal_moves(state: State) -> list[int]:
-    moves = []
-    if state.played_this_round == 0:
-        moves = deepcopy(state.hands[state.current_player])
-    else:
-        if max(state.hands[state.current_player]) > state.highest_value:
-            moves = [c for c in state.hands[state.current_player] if c > state.highest_value]
-        else:
-            moves = [min(state.hands[state.current_player])]
-    return moves
-
-
-def play_card(state: State, move: int) -> State:
-    '''
-    Remove move from current_player's hand
-    Update .value
-    Increment .current_player and .played_this_round
-    '''
-    next_state = deepcopy(state)
-    next_state.hands[next_state.current_player].remove(move)
-    next_state.played_cards.append(move)
-
-    if move > next_state.highest_value:
-        # Update value and assign new eventual winner
-        # Played above value
-        next_state.highest_value = move
-        next_state.round_winner = next_state.current_player
-    else:
-        # Played their smallest card
-        # upper_ceiling calculates the minimum upper ceiling
-        # just because i respond to a higher value, doesnt mean i can have the value-1
-        # I must take into account what i remember from previous rounds
-        upper_ceiling = min(next_state.highest_value, max(next_state.hand_info[next_state.current_player]))
-        next_state.hand_info[next_state.current_player] = set(range(move, upper_ceiling+1))
-
-
-
-    next_state.played_this_round += 1
-
-    if next_state.played_this_round >= len(next_state.hands):
-        # Last player has played
-        # The person which played the highest value this round
-        # shall be the new .current_player
-
-        next_state.current_player = next_state.round_winner
-
-        # Reset game for new round
-        next_state.highest_value = -1
-        next_state.round_winner = -1
-        next_state.played_this_round = 0
-    else:
-        # Another player shall play
-
-        # Increment .current_player
-        if next_state.current_player >= (len(next_state.hands)-1):
-            next_state.current_player = 0
-        else:
-            next_state.current_player += 1
-
-    return next_state
-
-
 def determinize(state: State, self_index: int) -> list[int]:
     '''
     '''
@@ -237,7 +143,7 @@ def determinize(state: State, self_index: int) -> list[int]:
         if card in unknown:
             unknown.remove(card)
 
-    shuffle(unknown)
+    random.shuffle(unknown)
     return unknown[:hand_len]
 
 
@@ -330,25 +236,14 @@ def choose_move(state: State):
         scores[move] += mean_eval
     return scores
 
-def return_random_hand(len=3):
-    shuffle(FULL_DECK)
-    return FULL_DECK[:len]
-
-state = State(
-    hands=[
-        [14, 14, 2],
-        [-1, -1, -1]
-    ],
-    hand_info=DEFAULT_HAND_INFO,
-    current_player=0,
-    highest_value=-1,
-    round_winner=-1,
-    played_this_round=0,
-    played_cards=[]
-)
-
-#scores = choose_move(state)
-#print(scores)
-eval = minimax(state)
-print("finished", eval)
+engine = gursh.Engine()
+state = gursh.State.new_game()
 print(state)
+
+while not engine.is_over(state):
+    legal_actions = engine.legal_moves(state)
+
+    action = random.choice(legal_actions)
+    
+    state = engine.apply_action(state, action)
+    print(state)
