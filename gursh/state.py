@@ -1,38 +1,6 @@
 from dataclasses import dataclass, field
 from random import shuffle
 
-'''
-state = fox.GameState.new_game()
-engine = fox.GameEngine()
-
-while not state.is_game_over():
-    legal_actions = engine.get_legal_actions(state)
-
-    action = random.choice(legal_actions)
-    engine.apply_action(state, action)
-'''
-
-'''
-state = fox.GameState.new_game()
-engine = fox.GameEngine()
-
-agents = [MyPPOAgent(), MyPPOAgent()]
-
-while not state.is_game_over():
-    current_player = state.current_player
-
-    obs = state.get_observable_state(current_player)
-    encoding = obs.encode()  # shape: (258,), dtype: float32
-
-    legal_actions = engine.get_legal_actions(state)
-    action = agents[current_player].get_action(encoding, legal_actions)
-
-    print(f"Player {current_player} plays {action}")
-    engine.apply_action(state, action)
-
-print(f"Winner: Player {state.winner()}")
-'''
-
 
 @dataclass
 class ObservableState:
@@ -109,8 +77,7 @@ class State:
 
     def get_winner(self) -> float:
         '''
-        Assumes is_game_over == True
-        Returns index of winner
+        Assumes is_game_over == True and returns 1 for player_0 win
         '''
         flat_hands = [hand[0] for hand in self.hands]
         max_value = max(flat_hands)
@@ -119,9 +86,9 @@ class State:
             if flat_hands[1] == max_value:
                 return 0.5
             else:
-                return 1.0
+                return 0.0
         else:
-            return 0.0
+            return 1.0
 
                 
     def get_observable_state(self, player):

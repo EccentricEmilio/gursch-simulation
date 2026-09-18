@@ -68,3 +68,55 @@ function minimax(position, depth, maximizingPlayer)
             averageEval = average(runningEval)
 			minEval = min(minEval, eval)
 		return minEval
+
+
+Stolen from github: https://dustinrubin.github.io/ai.cardgames/2025/10/20/fox-in-the-forest-rl-environment.html
+state = fox.GameState.new_game()
+engine = fox.GameEngine()
+
+while not state.is_game_over():
+    legal_actions = engine.get_legal_actions(state)
+
+    action = random.choice(legal_actions)
+    engine.apply_action(state, action)
+
+Also stolen from github:
+state = fox.GameState.new_game()
+engine = fox.GameEngine()
+
+agents = [MyPPOAgent(), MyPPOAgent()]
+
+while not state.is_game_over():
+    current_player = state.current_player
+
+    obs = state.get_observable_state(current_player)
+    encoding = obs.encode()  # shape: (258,), dtype: float32
+
+    legal_actions = engine.get_legal_actions(state)
+    action = agents[current_player].get_action(encoding, legal_actions)
+
+    print(f"Player {current_player} plays {action}")
+    engine.apply_action(state, action)
+
+print(f"Winner: Player {state.winner()}")
+
+Adapted for my code:
+
+engine = gursh.Engine()
+state = gursh.State.create_new_game()
+print(state)
+
+agents = [gursh.RandomAgent(), gursh.RandomAgent()]
+
+while not state.is_game_over():
+    current_player = state.current_player
+
+    obs = state.get_observable_state(current_player)
+
+    legal_actions = engine.get_legal_actions(state)
+    action = agents[current_player].get_action(obs, legal_actions)
+
+    print(f"Player {current_player} plays {action}")
+    state = engine.apply_action(state, action)
+
+print(f"Winner: Player {state.get_winner()}")
