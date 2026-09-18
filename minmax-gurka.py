@@ -1,88 +1,7 @@
-'''
-Placeholder for minimax algorithm
-
-function minimax(position, depth, maximizingPlayer)
-	if depth == 0 or game over in position
-		return static evaluation of position
- 
-	if maximizingPlayer
-		maxEval = -infinity
-		for each child of position
-			eval = minimax(child, depth - 1, false)
-			maxEval = max(maxEval, eval)
-		return maxEval
- 
-	else
-		minEval = +infinity
-		for each child of position
-			eval = minimax(child, depth - 1, true)
-			minEval = min(minEval, eval)
-		return minEval
- 
- 
-// initial call
-minimax(currentPosition, 3, true)
-
-function minimax(position, depth, maximizingPlayer)
-	if game over in position
-		return static evaluation of position
- 
-	if maximizingPlayer
-		maxEval = -infinity 
-		for each child of position
-            runningEval = []
-            for i in 1000:
-                determinize(child.enemyHand)
-			    eval = minimax(child, depth - 1, false)
-                runningEval.append(eval)
-            averageEval = average(runningEval)
-
-			maxEval = max(maxEval, averageEval)
-		return maxEval
- 
-	else
-		minEval = +infinity
-		for each child of position
-            runningEval = []
-            for i in 1000:
-                determinize(child.enemyHand)
-                eval = minimax(child, depth - 1, true)
-                runningEval.append(eval)
-            averageEval = average(runningEval)
-			minEval = min(minEval, eval)
-		return minEval
- 
- 
-// initial call
-minimax(currentPosition, 3, true)
-'''
-
-'''
-    Determinize needs to only create hands which are possible
-    If a person has played card a against the value b
-    where a <= b, then a = min(hand) and max(hand) <= b
-    What a player knows about an opponents hand then changes every time the opponent plays a <= b
-    in the beginning, the hand looks like this: 
-    [(1 - 14), (1 - 14), (1 - 14)]
-
-    If i play 12 and they in response plays 5, the hand changes:
-    [5, (5 - 12), (5 - 12)]
-
-    Generalized:
-    If i play a and they in response plays b, the hand changes:
-    [b, (b - a), (b - a)]
-
-    We shall save a hand_info in State, that corresponds to what each player knows
-    about the other player's hand. The first item in hand_info, hand_info[0]
-    is then the publically attainable knowledge about player_0
-'''
-
 from statistics import mean
 import random
 from copy import deepcopy
 import gursh
-
-COUNT = 0
 
 def determinize(state: gursh.State, self_index: int) -> list[int]:
     '''
@@ -156,15 +75,6 @@ def minimax(state: gursh.State) -> float:
             
 
 def choose_move(state: gursh.State):
-    '''
-    Assumes current_player == 0
-    and hands is formatted like this:
-    hands=[
-        [int, int, int],
-        [-1, -1, -1]
-    ]
-    '''
-    
     moves = legal_moves(state)
     scores = {
         move: 0
