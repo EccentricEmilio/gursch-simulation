@@ -5,15 +5,7 @@ class Engine:
     def __init__(self):
         pass
 
-
-    def is_over(self, state) -> bool:
-        '''
-        Check if the state is over
-        Terminal means that every person has 1 card left, no actions left to be made
-        '''
-        return all(len(hand) == 1 for hand in state.hands)
-
-    def legal_moves(self, state) -> list[int]:
+    def get_legal_actions(self, state) -> list[int]:
         moves = []
         current_player_hand = list(set(state.hands[state.current_player])) 
         if state.played_this_round == 0:

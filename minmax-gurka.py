@@ -81,53 +81,10 @@ from statistics import mean
 import random
 from copy import deepcopy
 import gursh
-from gursh import State
 
-FULL_DECK = list(range(2, 15)) * 4
-SIMULATIONS = 50
-ALL_CARDS  = set(range(2, 15))
-DEFAULT_HAND_INFO = [
-    ALL_CARDS.copy(),
-    ALL_CARDS.copy()
-]
 COUNT = 0
 
-def get_terminal_eval(state: State) -> float:
-    '''
-    It takes in a state where every player has 2 cards.
-    -1 means player 0 won (hands[0])
-    0 means a draw 
-    1 means player 1 won 
-    '''
-    if not state.played_this_round == 0:
-        raise RuntimeError
-
-    # Play first move
-    state_copy = deepcopy(state)
-    move = max(legal_moves(state_copy))
-    state_copy = play_card(state_copy, move)
-
-    # Every other player plays their highest card
-    while not all([len(hand)==1 for hand in state_copy.hands]):
-        state_copy = play_card(state_copy, max(legal_moves(state_copy)))
-
-    # Check for draws
-    flat_hands = [hand[0] for hand in state_copy.hands]
-    max_value = max(flat_hands)
-
-    if flat_hands[0] < max_value:
-        # Player 0 won
-        return 1.0
-        
-    elif flat_hands[1] < max_value:
-        # Player 1 won
-        return 0.0
-    
-    else:
-        # Draw
-        return 0.5
-
-def determinize(state: State, self_index: int) -> list[int]:
+def determinize(state: gursh.State, self_index: int) -> list[int]:
     '''
     '''
     if self_index == 0:
@@ -147,7 +104,7 @@ def determinize(state: State, self_index: int) -> list[int]:
     return unknown[:hand_len]
 
 
-def minimax(state: State) -> float:
+def minimax(state: gursh.State) -> float:
     global COUNT
     #print(COUNT)
     COUNT += 1
@@ -198,8 +155,7 @@ def minimax(state: State) -> float:
         return min_Eval
             
 
-
-def choose_move(state: State):
+def choose_move(state: gursh.State):
     '''
     Assumes current_player == 0
     and hands is formatted like this:
@@ -237,13 +193,20 @@ def choose_move(state: State):
     return scores
 
 engine = gursh.Engine()
-state = gursh.State.new_game()
+state = gursh.State.create_new_game()
 print(state)
 
-while not engine.is_over(state):
-    legal_actions = engine.legal_moves(state)
+agents = [gursh.RandomAgent(), gursh.RandomAgent()]
 
-    action = random.choice(legal_actions)
-    
+while not state.is_game_over():
+    current_player = state.current_player
+
+    obs = state.get_observable_state(current_player)
+
+    legal_actions = engine.get_legal_actions(state)
+    action = agents[current_player].get_action(obs, legal_actions)
+
+    print(f"Player {current_player} plays {action}")
     state = engine.apply_action(state, action)
-    print(state)
+
+print(f"Winner: Player {state.get_winner()}")

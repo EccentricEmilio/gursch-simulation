@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from random import shuffle
 
 '''
@@ -12,10 +12,31 @@ while not state.is_game_over():
     engine.apply_action(state, action)
 '''
 
-#TODO Implement copy function for State to make faster copying possible
+'''
+state = fox.GameState.new_game()
+engine = fox.GameEngine()
+
+agents = [MyPPOAgent(), MyPPOAgent()]
+
+while not state.is_game_over():
+    current_player = state.current_player
+
+    obs = state.get_observable_state(current_player)
+    encoding = obs.encode()  # shape: (258,), dtype: float32
+
+    legal_actions = engine.get_legal_actions(state)
+    action = agents[current_player].get_action(encoding, legal_actions)
+
+    print(f"Player {current_player} plays {action}")
+    engine.apply_action(state, action)
+
+print(f"Winner: Player {state.winner()}")
+'''
+
+
 @dataclass
-class State:
-    hands: list[list[int]]
+class ObservableState:
+    own_hand: list[int]
     hand_info: list[set]
     current_player: int # index of hands
 
@@ -26,8 +47,23 @@ class State:
     played_cards: list[int] # cards that have been played
 
 
+#TODO Implement copy function for State to make faster copying possible
+@dataclass
+class State:
+    hands: list[list[int]]
+    hand_info: list[set]
+    current_player: int # index of hands
+
+    played_this_round: int = 0 # amount of cards that has been played this round
+    played_cards: list[int] = field(default_factory=list)  # cards that have been played
+
+    highest_value: int | None = None # value to match
+    round_leader: int | None = None # Eventual round winner
+    winner: int | None = None
+
+
     @classmethod
-    def new_game(cls, hands: list = [], player_count: int = 2, hand_size: int = 3):
+    def create_new_game(cls, hands: list = [], player_count: int = 2, hand_size: int = 3):
         deck = list(range(2, 15)) * 4
         shuffle(deck)
 
@@ -63,3 +99,40 @@ class State:
             f"played_cards={self.played_cards}\n"
             f"hand_info={self.hand_info}"
         )
+
+    def is_game_over(self) -> bool:
+        '''
+        Check if the state is over
+        Terminal means that every person has 1 card left, no actions left to be made
+        '''
+        return all(len(hand) == 1 for hand in self.hands)
+
+    def get_winner(self) -> float:
+        '''
+        Assumes is_game_over == True
+        Returns index of winner
+        '''
+        flat_hands = [hand[0] for hand in self.hands]
+        max_value = max(flat_hands)
+
+        if flat_hands[0] == max_value:
+            if flat_hands[1] == max_value:
+                return 0.5
+            else:
+                return 1.0
+        else:
+            return 0.0
+
+                
+    def get_observable_state(self, player):
+        obs_state = ObservableState(
+            own_hand=self.hands[player],
+            hand_info=self.hand_info,
+            current_player=self.current_player,
+            highest_value=self.highest_value,
+            round_leader=self.round_leader,
+            played_this_round=self.played_this_round,
+            played_cards=self.played_cards
+        )
+
+        return obs_state
