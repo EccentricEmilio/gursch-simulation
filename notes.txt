@@ -120,3 +120,20 @@ while not state.is_game_over():
     state = engine.apply_action(state, action)
 
 print(f"Winner: Player {state.get_winner()}")
+
+
+
+Different methods:
+
+PPO 
+MCTS
+MCTS + determinization
+Minimax
+Minimax + determinization
+
+I also need to implement gursh with odds (money)
+
+Resources:
+https://calwoo.github.io/posts/2023-07-30-counterfactual-regret-minimization.html
+https://github.com/brianberns/CFR-Explained
+https://cupola.gettysburg.edu/csfac/19/

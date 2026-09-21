@@ -1,6 +1,8 @@
 from copy import deepcopy
+from .state import State
+import random
 
-def get_legal_actions(state) -> list[int]:
+def get_legal_actions(state: State) -> list[int]:
     moves = []
     current_player_hand = list(set(state.hands[state.current_player])) 
     if state.played_this_round == 0:
@@ -12,7 +14,7 @@ def get_legal_actions(state) -> list[int]:
             moves = [min(current_player_hand)]
     return moves
 
-def apply_action(state, move: int):
+def apply_action(state: State, move: int) -> State:
     '''
     Remove move from current_player's hand
     Update .value
@@ -22,7 +24,7 @@ def apply_action(state, move: int):
     next_state.hands[next_state.current_player].remove(move)
     next_state.played_cards.append(move)
 
-    if (next_state.highest_value is None) or (move > next_state.highest_value):
+    if move > next_state.highest_value:
         # Update value and assign new eventual winner
         # Played above value
         next_state.highest_value = move
@@ -46,8 +48,8 @@ def apply_action(state, move: int):
         next_state.current_player = next_state.round_leader
 
         # Reset game for new round
-        next_state.highest_value = None
-        next_state.round_leader = None
+        next_state.highest_value = -1
+        next_state.round_leader = -1
         next_state.played_this_round = 0
     else:
         # Another player shall play
@@ -56,3 +58,16 @@ def apply_action(state, move: int):
         next_state.current_player = (next_state.current_player + 1) % len(next_state.hands)
 
     return next_state
+
+
+def determinize_state(state: State, det_index: int) -> State:
+    unknown = list(state.hand_info[det_index]) * 4
+    for card in state.hands[det_index] + state.played_cards:
+        if card in unknown:
+            unknown.remove(card)
+    random.shuffle(unknown)
+
+    state = deepcopy(state)
+    state.hands[det_index] = unknown[:len(state.hands[det_index])]
+    
+    return state

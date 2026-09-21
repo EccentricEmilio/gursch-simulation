@@ -8,8 +8,8 @@ class ObservableState:
     hand_info: list[set]
     current_player: int # index of hands
 
-    highest_value: int | None # value to match
-    round_leader: int | None # Eventual round winner
+    highest_value: int # value to match
+    round_leader: int # Eventual round winner
 
     played_this_round: int # amount of cards that has been played this round
     played_cards: list[int] # cards that have been played
@@ -25,8 +25,8 @@ class State:
     played_this_round: int = 0 # amount of cards that has been played this round
     played_cards: list[int] = field(default_factory=list)  # cards that have been played
 
-    highest_value: int | None = None # value to match
-    round_leader: int | None = None # Eventual round winner
+    highest_value: int = -1 # value to match
+    round_leader: int = -1 # Eventual round winner
     winner: int | None = None
 
 
@@ -50,8 +50,8 @@ class State:
             hands=hands,
             hand_info=hand_info,
             current_player=0,
-            highest_value=None,
-            round_leader=None,
+            highest_value=-1,
+            round_leader=-1,
             played_this_round=0,
             played_cards=[],
         )
