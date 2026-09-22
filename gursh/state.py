@@ -1,18 +1,54 @@
 from dataclasses import dataclass, field
 from random import shuffle
+from typing import cast
 
 
 @dataclass
 class ObservableState:
-    own_hand: list[int]
+    hands: list[list[int] | list[None]] # same shape/indexing as State.hands: one
+                                   # list per player, in the SAME index. The
+                                   # viewer's own hand (hands[viewer]) holds
+                                   # real ints. Every other hand holds None
+                                   # in place of each hidden card - length
+                                   # still matches the real hand size, since
+                                   # you can see how many cards someone has
+                                   # even if you can't see which ones. This
+                                   # also leaves room to later reveal a
+                                   # SPECIFIC opponent card (swap one None
+                                   # for a real int) without changing shape.
     hand_info: list[set]
-    current_player: int # index of hands
+    viewer: int # index of hands whose observation this is (own_hand's index)
+    current_player: int # index of hands whose TURN it is - not necessarily
+                         # the same as viewer; this state might be built to
+                         # show a non-mover their own view mid someone
+                         # else's turn
 
     highest_value: int # value to match
     round_leader: int # Eventual round winner
 
     played_this_round: int # amount of cards that has been played this round
     played_cards: list[int] # cards that have been played
+
+    @property
+    def own_hand(self) -> list[int]:
+        '''
+        The viewer's own hand as a plain list[int] - never contains None,
+        so any function that only expects int-based hand methods (max(),
+        sums, membership checks, etc.) can call this directly, exactly as
+        it would on State.hands[player].
+
+        hands is typed list[list[int | None]] since OTHER players' hands
+        legitimately can hold None, so the type checker can't statically
+        know this particular slot never does - the assert enforces that
+        invariant at runtime, and the cast tells the type checker to trust
+        it afterward, rather than silently swallowing a bug by e.g.
+        filtering out unexpected Nones.
+        '''
+        hand = self.hands[self.viewer]
+        assert all(card is not None for card in hand), (
+            f"viewer {self.viewer}'s own hand contains None: {hand}"
+        )
+        return cast(list[int], hand)
 
 
 #TODO Implement copy function for State to make faster copying possible
@@ -56,6 +92,34 @@ class State:
             played_cards=[],
         )
 
+    @classmethod
+    def from_observable(cls, obs: "ObservableState") -> "State":
+        '''
+        Reconstruct a full State from what a single player (obs.viewer) can
+        actually see, for feeding into determinize_state / choose_move_maxn.
+        Each card that's None (hidden) becomes a -1 sentinel placeholder;
+        any card that's already a real int (obs.viewer's own hand, and any
+        future partially-revealed opponent card) passes through unchanged.
+        determinize_state only ever reads len(state.hands[i]) for i !=
+        self_index before overwriting that hand completely with sampled
+        cards, so the -1 placeholders themselves are never read for their
+        value - only their count matters.
+        '''
+        hands = [
+            [-1 if card is None else card for card in hand]
+            for hand in obs.hands
+        ]
+
+        return cls(
+            hands=hands,
+            hand_info=[set(s) for s in obs.hand_info],
+            current_player=obs.current_player,
+            played_this_round=obs.played_this_round,
+            played_cards=list(obs.played_cards),
+            highest_value=obs.highest_value,
+            round_leader=obs.round_leader,
+        )
+
 
     def __str__(self):
         return (
@@ -80,35 +144,48 @@ class State:
         Assumes is_game_over == True. Returns one utility value per player
         (length == player_count).
 
-        Payment model: whoever holds the highest final card is the loser
-        ("gurka") and pays their card's value to every other player. If
-        multiple players tie for the highest card, each of them pays their
-        value to every other player - including each other, which nets to
-        zero between two tied losers but still costs them against everyone
-        else. This is a zero-sum transfer: sum(get_utilities()) == 0.0
-        always, which is a good sanity check.
+        Payment model: whoever holds the highest final card (value V) is the
+        loser ("gurka") and pays V to every other player. If k players tie
+        for the highest card, they share that cost evenly: each winner still
+        receives the same total V (not k*V), but each of the k tied losers
+        only pays V/k to each winner, rather than each paying the full V.
+        If every player ties (k == n, no winners), no payment occurs and
+        every utility is 0.0. This is a zero-sum transfer either way:
+        sum(get_utilities()) == 0.0 always, which is a good sanity check.
         '''
         final_cards = [hand[0] for hand in self.hands]
         max_value = max(final_cards)
         n = len(final_cards)
 
+        losers = [i for i in range(n) if final_cards[i] == max_value]
+        k = len(losers)
+        winners_count = n - k
+
         utilities = [0.0] * n
+        if winners_count == 0:
+            # Everyone tied - no winners to pay, nothing changes hands.
+            return utilities
+
+        share_per_loser = max_value / k
         for i in range(n):
-            inflow = sum(
-                final_cards[j]
-                for j in range(n)
-                if j != i and final_cards[j] == max_value
-            )
-            outflow = final_cards[i] * (n - 1) if final_cards[i] == max_value else 0
-            utilities[i] = inflow - outflow
+            if i in losers:
+                utilities[i] = -share_per_loser * winners_count
+            else:
+                utilities[i] = max_value
 
         return utilities
 
                 
-    def get_observable_state(self, player):
+    def get_observable_state(self, viewer: int) -> ObservableState:
+        hands = [
+            list(hand) if i == viewer else [None] * len(hand)
+            for i, hand in enumerate(self.hands)
+        ]
+
         obs_state = ObservableState(
-            own_hand=self.hands[player],
+            hands=hands,
             hand_info=self.hand_info,
+            viewer=viewer,
             current_player=self.current_player,
             highest_value=self.highest_value,
             round_leader=self.round_leader,
