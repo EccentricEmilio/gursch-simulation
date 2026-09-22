@@ -1,7 +1,7 @@
 from copy import deepcopy
 from collections import Counter
-from .state import State
 import random
+from .state import State
 
 def get_legal_actions(state: State) -> list[int]:
     moves = []
@@ -111,7 +111,7 @@ def determinize_state(state: State, self_index: int, max_attempts: int = 500) ->
             new_state = deepcopy(state)
             for i in other_indices:
                 new_state.hands[i] = assignment[i]
-                return new_state
+            return new_state
 
     raise RuntimeError(
         "determinize_state: no feasible joint hand assignment found in "

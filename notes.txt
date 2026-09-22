@@ -131,7 +131,8 @@ MCTS + determinization
 Minimax
 Minimax + determinization
 
-I also need to implement gursh with odds (money)
+
+Move State class methods into their seperate methods
 
 Resources:
 https://calwoo.github.io/posts/2023-07-30-counterfactual-regret-minimization.html

@@ -1,6 +1,6 @@
 from statistics import mean
-from gursh import engine, State
-
+from .state import State
+from . import engine
 
 def maxn(state: State) -> list[float]:
     '''
@@ -27,6 +27,7 @@ def maxn(state: State) -> list[float]:
         vector = maxn(child_state)
         if best_vector is None or vector[player] > best_vector[player]:
             best_vector = vector
+    assert best_vector is not None, "No legal actions available for non-terminal state."
 
     return best_vector
 
@@ -53,15 +54,11 @@ def choose_move_maxn(state: State, simulations: int = 100) -> dict[int, float]:
     return {action: mean(vals) for action, vals in values.items()}
 
 
-def test_choose_move_maxn(player_count: int = 3, hand_size: int = 4, simulations: int = 50):
+def test_choose_move_maxn(player_count: int = 3, hand_size: int = 4, simulations: int = 100):
     state = State.create_new_game(player_count=player_count, hand_size=hand_size)
     print(state)
     print(f"Acting player: {state.current_player}")
     values = choose_move_maxn(state, simulations=simulations)
     print(f"Values (from acting player's perspective): {values}")
-    best_move = max(values, key=values.get)
+    best_move = max(values, key=lambda k: values[k])
     print(f"Best move: {best_move}")
-
-
-if __name__ == "__main__":
-    test_choose_move_maxn()
