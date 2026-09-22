@@ -75,20 +75,34 @@ class State:
         '''
         return all(len(hand) == 1 for hand in self.hands)
 
-    def get_winner(self) -> float:
+    def get_utilities(self) -> list[float]:
         '''
-        Assumes is_game_over == True and returns 1 for player_0 win
-        '''
-        flat_hands = [hand[0] for hand in self.hands]
-        max_value = max(flat_hands)
+        Assumes is_game_over == True. Returns one utility value per player
+        (length == player_count).
 
-        if flat_hands[0] == max_value:
-            if flat_hands[1] == max_value:
-                return 0.5
-            else:
-                return 0.0
-        else:
-            return 1.0
+        Payment model: whoever holds the highest final card is the loser
+        ("gurka") and pays their card's value to every other player. If
+        multiple players tie for the highest card, each of them pays their
+        value to every other player - including each other, which nets to
+        zero between two tied losers but still costs them against everyone
+        else. This is a zero-sum transfer: sum(get_utilities()) == 0.0
+        always, which is a good sanity check.
+        '''
+        final_cards = [hand[0] for hand in self.hands]
+        max_value = max(final_cards)
+        n = len(final_cards)
+
+        utilities = [0.0] * n
+        for i in range(n):
+            inflow = sum(
+                final_cards[j]
+                for j in range(n)
+                if j != i and final_cards[j] == max_value
+            )
+            outflow = final_cards[i] * (n - 1) if final_cards[i] == max_value else 0
+            utilities[i] = inflow - outflow
+
+        return utilities
 
                 
     def get_observable_state(self, player):

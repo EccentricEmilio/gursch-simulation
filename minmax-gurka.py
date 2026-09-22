@@ -1,94 +1,67 @@
 from statistics import mean
-import random
-from copy import deepcopy
-from gursh import engine, State, state
+from gursh import engine, State
 
 
-def minimax(state: State) -> float:
+def maxn(state: State) -> list[float]:
+    '''
+    N-player generalization of minimax. Instead of one scalar (player 0's
+    advantage), each node's value is a vector with one utility per player.
+    The player to move picks the action that maximizes *their own* entry in
+    the vector, and the whole vector (everyone's utility under that choice)
+    propagates upward.
+
+    Note: unlike 2-player minimax, this does not support classic alpha-beta
+    pruning. Bounding one player's value no longer bounds another's, since
+    it's not a zero-sum relationship, so only weaker "shallow pruning" is
+    available. Expect this to be noticeably more expensive per node than
+    the 2-player case for the same branching factor and depth.
+    '''
     if state.is_game_over():
-        return state.get_winner()
- 
-    if state.current_player == 0:
-        maxEval = -2
+        return state.get_utilities()
 
-        legal_actions = engine.get_legal_actions(state)
-        for action in legal_actions:
-            child_state = engine.apply_action(state, action)
+    player = state.current_player
+    best_vector = None
 
-            eval = minimax(child_state)
-            maxEval = max(maxEval, eval)
-        return maxEval
-
-    else:
-        minEval = +2
-
-        legal_actions = engine.get_legal_actions(state)
-        for action in legal_actions:
-            child_state = engine.apply_action(state, action)
-
-            eval = minimax(child_state)
-            minEval = min(minEval, eval)
-        return minEval
-
-
-def choose_move(state: State) -> dict[int, list[float]]:
-    legal_actions = engine.get_legal_actions(state)
-    values = {action: [] for action in legal_actions}
-
-    for action in legal_actions:
+    for action in engine.get_legal_actions(state):
         child_state = engine.apply_action(state, action)
-        eval = minimax(child_state)
+        vector = maxn(child_state)
+        if best_vector is None or vector[player] > best_vector[player]:
+            best_vector = vector
 
-        values[action].append(eval)
-    return values
+    return best_vector
 
-def choose_move_determinized(state: State, simulations: int = 100) -> dict[int, float]:
+
+def choose_move_maxn(state: State, simulations: int = 100) -> dict[int, float]:
+    '''
+    Determinized maxn move evaluation, from the perspective of whichever
+    player is actually on the clock (state.current_player) - no hardcoded
+    player index anywhere in this path.
+    '''
+    self_index = state.current_player
     legal_actions = engine.get_legal_actions(state)
     values = {action: [] for action in legal_actions}
 
     for _ in range(simulations):
-        det_state = engine.determinize_state(state, 1)
+        det_state = engine.determinize_state(state, self_index)
+
         for action in legal_actions:
             child_state = engine.apply_action(det_state, action)
-            eval = minimax(child_state)
+            vector = maxn(child_state)
+            # Only the acting player's own utility matters for their choice.
+            values[action].append(vector[self_index])
 
-            values[action].append(eval)
-
-    values = {action: mean(values[action]) for action in legal_actions}
-
-    return values
+    return {action: mean(vals) for action, vals in values.items()}
 
 
-
-def test_highest_choose_move():
-    flag = False
-    for _ in range(100):
-        state = State.create_new_game()
-        values = choose_move_determinized(state)
-        best_move = max(values, key=values.get)
-        if best_move != max(state.hands[0]):
-            flag = True
-            print(f"State: {state}")
-            print(f"Values: {values}")
-    if flag:
-        print("Test failed: The best move was not the highest card in hand.")
-    else:
-        print("Test passed: The best move was the highest card in hand.")
+def test_choose_move_maxn(player_count: int = 3, hand_size: int = 4, simulations: int = 50):
+    state = State.create_new_game(player_count=player_count, hand_size=hand_size)
+    print(state)
+    print(f"Acting player: {state.current_player}")
+    values = choose_move_maxn(state, simulations=simulations)
+    print(f"Values (from acting player's perspective): {values}")
+    best_move = max(values, key=values.get)
+    print(f"Best move: {best_move}")
 
 
-def test_choose_move():
-    state = State.create_new_game(hand_size = 5)
-    values = choose_move_determinized(state)
-    print(f"State: {state}")
-    print(f"Values: {values}")
-
-
-
-test_choose_move()
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    test_choose_move_maxn()
