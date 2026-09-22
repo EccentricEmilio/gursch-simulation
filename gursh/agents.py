@@ -1,5 +1,5 @@
 import random 
-from .state import State, ObservableState
+from .state import ObservableState, state_from_observable
 from . import minmax
 
 class Agent:
@@ -23,7 +23,7 @@ class MaxNAgent(Agent):
 
     def get_action(self, observable_state: ObservableState, legal_actions: list[int]) -> int:
     
-        state = State.from_observable(observable_state)
+        state = state_from_observable(observable_state)
 
         move_values = minmax.choose_move_maxn(state, simulations=self.simulations)
 
@@ -34,7 +34,7 @@ class MaxNAgent(Agent):
 class HumanAgent(Agent):
     def get_action(self, observable_state: ObservableState, legal_actions: list[int]) -> int:
         print("Your turn!")
-        print(f"Your hand: {observable_state.hands[observable_state.viewer]}")
+        print(f"Your hand: {observable_state.own_hand}")
         print("Enemy info:")
         for index, info in enumerate(list(observable_state.hand_info)):
             if index != observable_state.viewer:

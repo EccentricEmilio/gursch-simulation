@@ -9,7 +9,7 @@ def run_tournament(silent: bool = True):
         gu.agents.HumanAgent()
     ]
 
-    state = gu.state.State.create_new_game(player_count=len(agents), hand_size=4)
+    state = gu.state.create_new_state(player_count=len(agents), hand_size=4)
 
     while not state.is_game_over():
         current_player = state.current_player

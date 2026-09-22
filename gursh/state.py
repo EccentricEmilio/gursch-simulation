@@ -66,61 +66,6 @@ class State:
     winner: int | None = None
 
 
-    @classmethod
-    def create_new_game(cls, hands: list = [], player_count: int = 2, hand_size: int = 3):
-        deck = list(range(2, 15)) * 4
-        shuffle(deck)
-
-        if hands == []:
-            hands = [
-                deck[i * hand_size:(i + 1) * hand_size]
-                for i in range(player_count)
-            ]
-
-        hand_info = [
-            set(range(2, 15))
-            for _ in range(player_count)
-        ]
-
-        return cls(
-            hands=hands,
-            hand_info=hand_info,
-            current_player=0,
-            highest_value=-1,
-            round_leader=-1,
-            played_this_round=0,
-            played_cards=[],
-        )
-
-    @classmethod
-    def from_observable(cls, obs: "ObservableState") -> "State":
-        '''
-        Reconstruct a full State from what a single player (obs.viewer) can
-        actually see, for feeding into determinize_state / choose_move_maxn.
-        Each card that's None (hidden) becomes a -1 sentinel placeholder;
-        any card that's already a real int (obs.viewer's own hand, and any
-        future partially-revealed opponent card) passes through unchanged.
-        determinize_state only ever reads len(state.hands[i]) for i !=
-        self_index before overwriting that hand completely with sampled
-        cards, so the -1 placeholders themselves are never read for their
-        value - only their count matters.
-        '''
-        hands = [
-            [-1 if card is None else card for card in hand]
-            for hand in obs.hands
-        ]
-
-        return cls(
-            hands=hands,
-            hand_info=[set(s) for s in obs.hand_info],
-            current_player=obs.current_player,
-            played_this_round=obs.played_this_round,
-            played_cards=list(obs.played_cards),
-            highest_value=obs.highest_value,
-            round_leader=obs.round_leader,
-        )
-
-
     def __str__(self):
         return (
             f"hands={self.hands}\n"
@@ -131,6 +76,7 @@ class State:
             f"played_cards={self.played_cards}\n"
             f"hand_info={self.hand_info}"
         )
+
 
     def is_game_over(self) -> bool:
         '''
@@ -194,3 +140,57 @@ class State:
         )
 
         return obs_state
+
+
+def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3):
+    deck = list(range(2, 15)) * 4
+    shuffle(deck)
+
+    if hands == []:
+        hands = [
+            deck[i * hand_size:(i + 1) * hand_size]
+            for i in range(player_count)
+        ]
+
+    hand_info = [
+        set(range(2, 15))
+        for _ in range(player_count)
+    ]
+
+    return State(
+        hands=hands,
+        hand_info=hand_info,
+        current_player=0,
+        highest_value=-1,
+        round_leader=-1,
+        played_this_round=0,
+        played_cards=[],
+    )
+
+
+def state_from_observable(obs: "ObservableState") -> "State":
+    '''
+    Reconstruct a full State from what a single player (obs.viewer) can
+    actually see, for feeding into determinize_state / choose_move_maxn.
+    Each card that's None (hidden) becomes a -1 sentinel placeholder;
+    any card that's already a real int (obs.viewer's own hand, and any
+    future partially-revealed opponent card) passes through unchanged.
+    determinize_state only ever reads len(state.hands[i]) for i !=
+    self_index before overwriting that hand completely with sampled
+    cards, so the -1 placeholders themselves are never read for their
+    value - only their count matters.
+    '''
+    hands = [
+        [-1 if card is None else card for card in hand]
+        for hand in obs.hands
+    ]
+
+    return State(
+        hands=hands,
+        hand_info=[set(s) for s in obs.hand_info],
+        current_player=obs.current_player,
+        played_this_round=obs.played_this_round,
+        played_cards=list(obs.played_cards),
+        highest_value=obs.highest_value,
+        round_leader=obs.round_leader,
+    )
