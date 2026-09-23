@@ -1,5 +1,15 @@
-Sevens work like this:
-In lead moves, sevens are allowed to be combined with other cards, and in this case the take on the value of the card that it is combined with. However, sevens are only allowed to be combined with one card type at a time. Examples: 
+A standard 52-card pack is used, ranking from ace (high) to two (low) and there can be from 3 to 7 players. Five cards are dealt to each player, one at a time, clockwise. Play is clockwise, beginning with the player to dealer's left.
+
+Any card may be led. Other players in turn must either play a card that is at least as high as the highest card so far played to the trick, or play their lowest card. The trick is won by the highest card played to it, and if several equally high cards are played, by the last of those.
+
+The player who leads may lead a single card or any number of equal cards - for example two eights or three jacks. If a single card is led, then subsequent players must beat or equal the highest card in the trick or play their lowest card. If more than one card is led, subsequent players must each player an equal number of cards. These cards need not be equal to each other, but they must be at least as high as the highest set of cards so far played to the trick, or the lowest cards that the player has. For example if 5-5-5 is led, the next player might play 5-9-J, on which the following player could play 8-Q-K. The fourth player, holding for example 2, 4, 7, 7, J, J, A cannot play higher or equal; having used the ace to beat the king there is no other card in the hand that is as good as the queen. Therefore this player would be forced to play 2-4-7.
+
+Whoever has the highest card/cards in the last trick scores that many penalty points (J=11, Q=12, K=13, A=14). If multiple cards are played in the last trick, then the trick scores are added up. The player with the highest trick score must pay that amount of score to each other player. If a draw happens, the players who are tied share the score cost. 
+
+There is also a variant where the 7:s act like jokers.
+In lead moves, sevens are allowed to be combined with other cards, and in that case they take on the value of the card that it is combined with. However, sevens are only allowed to be combined with one card type at a time. 
+
+Examples: 
 Allowed Moves:
 [7, 7 ,A] -> the same as -> [A, A, A]
 [7, 4, 4] -> the same as -> [4, 4, 4]
@@ -7,8 +17,6 @@ Not allowed moves:
 [7, 4, 3]
 When counting scores, sevens are worth seven.
 
-In response moves, sevens are always allowed, as they can take on the value of an ace. 
+In response moves, sevens are always allowed, as they take on the value of an ace. 
 
-When counting score of final move, if seven has been used as in the lead move, combined with one other card value, they take on the value of that value. Otherwise, they are worth seven.
-
-https://allakortspel.se/gurka/
+When counting score of final move, if seven has been combined with one other card value, they take on the value of that value. Otherwise, they are worth seven.

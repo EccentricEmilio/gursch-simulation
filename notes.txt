@@ -138,3 +138,6 @@ Resources:
 https://calwoo.github.io/posts/2023-07-30-counterfactual-regret-minimization.html
 https://github.com/brianberns/CFR-Explained
 https://cupola.gettysburg.edu/csfac/19/
+https://www.pagat.com/last/cucumber.html
+https://en.wikipedia.org/wiki/Cucumber_(card_game)#CITEREFParlett2008
+https://allakortspel.se/gurka/
