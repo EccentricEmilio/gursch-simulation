@@ -63,15 +63,24 @@ class State:
 
     highest_value: int = -1 # value to match
     round_leader: int = -1 # Eventual round winner
-    winner: int | None = None
 
+    def copy(self) -> "State":
+        return State(
+            hands=[hand[:] for hand in self.hands],
+            hand_info=[info.copy() for info in self.hand_info],
+            current_player=self.current_player,
+            played_this_round=self.played_this_round,
+            played_cards=self.played_cards[:],
+            highest_value=self.highest_value,
+            round_leader=self.round_leader,
+        )
 
     def __str__(self):
         return (
             f"hands={self.hands}\n"
             f"current_player={self.current_player}\n"
             f"highest_value={self.highest_value}\n"
-            f"round_winner={self.round_leader}\n"
+            f"round_leader={self.round_leader}\n"
             f"played_this_round={self.played_this_round}\n"
             f"played_cards={self.played_cards}\n"
             f"hand_info={self.hand_info}"

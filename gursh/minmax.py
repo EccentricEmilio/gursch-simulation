@@ -1,5 +1,5 @@
 from statistics import mean
-from .state import State
+from .state import State, create_new_state
 from . import engine
 
 def maxn(state: State) -> list[float]:
@@ -55,7 +55,7 @@ def choose_move_maxn(state: State, simulations: int = 100) -> dict[int, float]:
 
 
 def test_choose_move_maxn(player_count: int = 3, hand_size: int = 4, simulations: int = 100):
-    state = State.create_new_game(player_count=player_count, hand_size=hand_size)
+    state = create_new_state(player_count=player_count, hand_size=hand_size)
     print(state)
     print(f"Acting player: {state.current_player}")
     values = choose_move_maxn(state, simulations=simulations)
