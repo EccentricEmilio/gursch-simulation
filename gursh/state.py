@@ -24,10 +24,11 @@ class ObservableState:
                          # else's turn
 
     highest_value: int # value to match
+    move_length: int # length of the lead_move that have been played this round
     round_leader: int # Eventual round winner
 
     played_this_round: int # amount of cards that has been played this round
-    played_cards: list[int] # cards that have been played
+    played_moves: list[list[int]] # moves that have been played
 
     @property
     def own_hand(self) -> list[int]:
@@ -51,17 +52,17 @@ class ObservableState:
         return cast(list[int], hand)
 
 
-#TODO Implement copy function for State to make faster copying possible
 @dataclass
 class State:
     hands: list[list[int]]
     hand_info: list[set]
     current_player: int # index of hands
 
-    played_this_round: int = 0 # amount of cards that has been played this round
-    played_cards: list[int] = field(default_factory=list)  # cards that have been played
+    played_this_round: int = 0 # amount of moves that has been played this round
+    played_moves: list[list[int]] = field(default_factory=list)  # moves that have been played
 
     highest_value: int = -1 # value to match
+    move_length: int = -1 # length of the lead_move that have been played this round 
     round_leader: int = -1 # Eventual round winner
 
     def copy(self) -> "State":
@@ -70,8 +71,9 @@ class State:
             hand_info=[info.copy() for info in self.hand_info],
             current_player=self.current_player,
             played_this_round=self.played_this_round,
-            played_cards=self.played_cards[:],
+            played_moves=self.played_moves[:],
             highest_value=self.highest_value,
+            move_length=self.move_length,
             round_leader=self.round_leader,
         )
 
@@ -82,7 +84,8 @@ class State:
             f"highest_value={self.highest_value}\n"
             f"round_leader={self.round_leader}\n"
             f"played_this_round={self.played_this_round}\n"
-            f"played_cards={self.played_cards}\n"
+            f"played_moves={self.played_moves}\n"
+            f"move_length={self.move_length}\n"
             f"hand_info={self.hand_info}"
         )
 
@@ -90,9 +93,9 @@ class State:
     def is_game_over(self) -> bool:
         '''
         Check if the state is over
-        Terminal means that every person has 1 card left, no actions left to be made
+        Terminal means that every person has 0 cards left, no actions left to be made
         '''
-        return all(len(hand) == 1 for hand in self.hands)
+        return all(len(hand) == 0 for hand in self.hands)
 
     def get_utilities(self) -> list[float]:
         '''
@@ -143,9 +146,10 @@ class State:
             viewer=viewer,
             current_player=self.current_player,
             highest_value=self.highest_value,
+            move_length=self.move_length,
             round_leader=self.round_leader,
             played_this_round=self.played_this_round,
-            played_cards=self.played_cards
+            played_moves=self.played_moves
         )
 
         return obs_state
@@ -171,9 +175,10 @@ def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3
         hand_info=hand_info,
         current_player=0,
         highest_value=-1,
+        move_length=-1,
         round_leader=-1,
         played_this_round=0,
-        played_cards=[],
+        played_moves=[],
     )
 
 
@@ -199,7 +204,8 @@ def state_from_observable(obs: "ObservableState") -> "State":
         hand_info=[set(s) for s in obs.hand_info],
         current_player=obs.current_player,
         played_this_round=obs.played_this_round,
-        played_cards=list(obs.played_cards),
+        played_moves=list(obs.played_moves),
         highest_value=obs.highest_value,
         round_leader=obs.round_leader,
+        move_length=obs.move_length,
     )

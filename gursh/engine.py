@@ -1,43 +1,63 @@
 from copy import deepcopy
 from collections import Counter
+import itertools
 import random
 from .state import State
 
-def get_legal_actions(state: State) -> list[int]:
-    moves = []
-    current_player_hand = list(set(state.hands[state.current_player])) 
+
+def get_legal_moves(state: State) -> list[list[int]]:
+    moves: list[list[int]] = []
+    player_hand = state.hands[state.current_player] 
     if state.played_this_round == 0:
-        moves = current_player_hand
+        # Lead
+        counts = Counter(player_hand)
+        for rank in sorted(counts):
+            for k in range(1, counts[rank] + 1):
+                moves.append([rank,] * k)
     else:
-        if max(current_player_hand) > state.highest_value:
-            moves = [c for c in current_player_hand if c > state.highest_value]
-        else:
-            moves = [min(current_player_hand)]
+        # Response
+        # Both the lowest, and all possible moves that are higher than the current highest value are legal
+        # Lowest
+        lowest_move = sorted(player_hand)[:state.move_length]
+        moves.append(lowest_move)
+
+        # Above or matching the highest value
+        above_highest = [c for c in player_hand if c >= state.highest_value]
+        moves_above_highest = []
+        for r in range(len(above_highest) + 1):
+            for comb in itertools.combinations(above_highest, r):
+                if len(comb) == state.move_length and comb not in moves_above_highest:
+                    moves_above_highest.append(list(comb))
+        moves.extend(moves_above_highest)
     return moves
 
-def apply_action(state: State, move: int) -> State:
+def apply_action(state: State, move: list[int]) -> State:
     '''
     Remove move from current_player's hand
-    Update .value
+    Update .highest_value and .round_leader if necessary
+    Update .hand_info for current_player if necessary
+    Update .played_moves
+    Update .move_length if necessary
     Increment .current_player and .played_this_round
     '''
-    next_state = deepcopy(state)
-    next_state.hands[next_state.current_player].remove(move)
-    next_state.played_cards.append(move)
+    next_state = state.copy()
+    for c in move:
+        next_state.hands[next_state.current_player].remove(c)
+    next_state.played_moves.append(move)
 
-    if move > next_state.highest_value:
-        # Update value and assign new eventual winner
-        # Played above value
-        next_state.highest_value = move
+    if next_state.played_this_round == 0:
+        # Lead move, update move_length
+        next_state.move_length = len(move)
+    
+    if all([(c > next_state.highest_value) for c in move]):
+        # Response over highest value, or leading the round
+        # Update highest_value and assign new eventual winner
+        next_state.highest_value = max(move)
         next_state.round_leader = next_state.current_player
     else:
         # Played their smallest card and is not the first round
-        # upper_ceiling calculates the minimum upper ceiling
-
-        # just because i respond to a higher value, doesnt mean i can have the value-1
-        # I must take into account what i remember from previous rounds
-        upper_ceiling = min(next_state.highest_value, max(next_state.hand_info[next_state.current_player]))
-        next_state.hand_info[next_state.current_player] = set(range(move, upper_ceiling+1))
+        # max(move) == lowest card left in hand
+        next_state.hand_info[next_state.current_player] = set(range(max(move), 15))
 
     next_state.played_this_round += 1
 
@@ -54,7 +74,6 @@ def apply_action(state: State, move: int) -> State:
         next_state.played_this_round = 0
     else:
         # Another player shall play
-
         # Increment .current_player
         next_state.current_player = (next_state.current_player + 1) % len(next_state.hands)
 
@@ -119,3 +138,47 @@ def determinize_state(state: State, self_index: int, max_attempts: int = 500) ->
         "inconsistent, or the greedy sampler needs a smarter (e.g. "
         "backtracking / Hall's-theorem-based) assignment strategy."
     )
+
+def get_utilities(state: State) -> list[float]:
+    '''
+    Assumes is_game_over == True. Returns one utility value per player
+    (length == player_count).
+
+    Payment model: whoever holds the highest final card (value V) is the
+    loser ("gurka") and pays V to every other player. If k players tie
+    for the highest card, they share that cost evenly: each winner still
+    receives the same total V (not k*V), but each of the k tied losers
+    only pays V/k to each winner, rather than each paying the full V.
+    If every player ties (k == n, no winners), no payment occurs and
+    every utility is 0.0. This is a zero-sum transfer either way:
+    sum(get_utilities()) == 0.0 always, which is a good sanity check.
+    '''
+
+    
+    '''
+    TODO:
+    I need to reconstruct the played moves from self.played_moves and map them to the players.
+    
+    '''
+
+    final_cards = [hand[0] for hand in self.hands]
+    max_value = max(final_cards)
+    n = len(final_cards)
+
+    losers = [i for i in range(n) if final_cards[i] == max_value]
+    k = len(losers)
+    winners_count = n - k
+
+    utilities = [0.0] * n
+    if winners_count == 0:
+        # Everyone tied - no winners to pay, nothing changes hands.
+        return utilities
+
+    share_per_loser = max_value / k
+    for i in range(n):
+        if i in losers:
+            utilities[i] = -share_per_loser * winners_count
+        else:
+            utilities[i] = max_value
+
+    return utilities 

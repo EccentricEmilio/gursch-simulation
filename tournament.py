@@ -6,7 +6,6 @@ def run_tournament(silent: bool = True):
         gu.agents.RandomAgent(), 
         gu.agents.MaxNAgent(), 
         gu.agents.HighestCardAgent(), 
-        gu.agents.HumanAgent()
     ]
 
     state = gu.state.create_new_state(player_count=len(agents), hand_size=4)
@@ -35,7 +34,7 @@ def run_multiple_tournaments(num_tournaments: int = 10):
     results = []
     for i in range(num_tournaments):
         print(f"Running tournament {i+1}/{num_tournaments}")
-        results.append(run_tournament(silent=False))
+        results.append(run_tournament(silent=True))
     mean_result = [sum(x) / len(x) for x in zip(*results)]
     print(f"Mean result over {num_tournaments} tournaments: {mean_result}")
     return results, mean_result
