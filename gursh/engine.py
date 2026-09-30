@@ -62,6 +62,11 @@ def apply_action(state: State, move: list[int]) -> State:
     next_state.played_this_round += 1
 
     if next_state.played_this_round == len(next_state.hands):
+        if state.is_game_over():
+            # If game is over
+            # Dont change current_player so that get_utilites knows the round order
+            return next_state
+
         # Last player has played
         # The person which played the highest value this round
         # shall be the new .current_player
@@ -160,8 +165,20 @@ def get_utilities(state: State) -> list[float]:
     I need to reconstruct the played moves from self.played_moves and map them to the players.
     
     '''
+    index_list = list(range(len(state.hands)))
 
-    final_cards = [hand[0] for hand in self.hands]
+    last_round_index = index_list[state.current_player+1:] + index_list[:state.current_player+1]
+    players_last_move = state.played_moves[len(state.hands):]
+    for indx in last_round_index:
+
+    # state.current_player is the last player of the round
+    # state.current_player +1 is the first player 
+
+
+
+
+
+    final_cards = [hand[0] for hand in state.hands]
     max_value = max(final_cards)
     n = len(final_cards)
 
