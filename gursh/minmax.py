@@ -17,7 +17,7 @@ def maxn(state: State) -> list[float]:
     the 2-player case for the same branching factor and depth.
     '''
     if state.is_game_over():
-        return state.get_utilities()
+        return engine.get_utilities(state)
 
     player = state.current_player
     best_vector = None
@@ -32,7 +32,7 @@ def maxn(state: State) -> list[float]:
     return best_vector
 
 
-def choose_move_maxn(state: State, simulations: int = 100) -> dict[list[int], float]:
+def choose_move_maxn(state: State, simulations: int = 100) -> dict[tuple[int, ...], float]:
     '''
     Determinized maxn move evaluation, from the perspective of whichever
     player is actually on the clock (state.current_player) - no hardcoded
@@ -40,7 +40,7 @@ def choose_move_maxn(state: State, simulations: int = 100) -> dict[list[int], fl
     '''
     self_index = state.current_player
     legal_actions = engine.get_legal_moves(state)
-    #TODO lists are not hashable (action)
+
     values = {action: [] for action in legal_actions}
 
     for _ in range(simulations):

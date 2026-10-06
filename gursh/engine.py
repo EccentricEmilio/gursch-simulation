@@ -5,20 +5,20 @@ import random
 from .state import State
 
 
-def get_legal_moves(state: State) -> list[list[int]]:
-    moves: list[list[int]] = []
+def get_legal_moves(state: State) -> list[tuple[int, ...]]:
+    moves: list[tuple[int, ...]] = []
     player_hand = state.hands[state.current_player] 
     if state.played_this_round == 0:
         # Lead
         counts = Counter(player_hand)
         for rank in sorted(counts):
             for k in range(1, counts[rank] + 1):
-                moves.append([rank,] * k)
+                moves.append((rank,) * k)
     else:
         # Response
         # Both the lowest, and all possible moves that are higher than the current highest value are legal
         # Lowest
-        lowest_move = sorted(player_hand)[:state.move_length]
+        lowest_move = tuple(sorted(player_hand)[:state.move_length])
         moves.append(lowest_move)
 
         # Above or matching the highest value
@@ -27,11 +27,11 @@ def get_legal_moves(state: State) -> list[list[int]]:
         for r in range(len(above_highest) + 1):
             for comb in itertools.combinations(above_highest, r):
                 if len(comb) == state.move_length and comb not in moves_above_highest:
-                    moves_above_highest.append(list(comb))
+                    moves_above_highest.append(tuple(comb))
         moves.extend(moves_above_highest)
     return moves
 
-def apply_action(state: State, move: list[int]) -> State:
+def apply_action(state: State, move: tuple[int, ...]) -> State:
     '''
     Remove move from current_player's hand
     Update .highest_value and .round_leader if necessary
@@ -167,7 +167,6 @@ def get_utilities(state: State):
     # [(0, [2, 7]), (1, [11, 6]), (2, [9, 9]), (3, [10, 11])]
     sorted_moves = sorted(assigned_moves, key = lambda x: x[0])
     # [9, 17, 18, 21]
-    print(sorted_moves)
     
     move_values = [sum(m[1]) for m in sorted_moves]
     max_value = max(move_values)

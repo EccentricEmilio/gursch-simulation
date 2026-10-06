@@ -28,7 +28,7 @@ class ObservableState:
     round_leader: int # Eventual round winner
 
     played_this_round: int # amount of cards that has been played this round
-    played_moves: list[list[int]] # moves that have been played
+    played_moves: list[tuple[int, ...]] # moves that have been played
 
     @property
     def own_hand(self) -> list[int]:
@@ -59,7 +59,7 @@ class State:
     current_player: int # index of hands
 
     played_this_round: int = 0 # amount of moves that has been played this round
-    played_moves: list[list[int]] = field(default_factory=list)  # moves that have been played
+    played_moves: list[tuple[int, ...]] = field(default_factory=list)  # moves that have been played
 
     highest_value: int = -1 # value to match
     move_length: int = -1 # length of the lead_move that have been played this round 
@@ -97,43 +97,7 @@ class State:
         '''
         return all(len(hand) == 0 for hand in self.hands)
 
-    def get_utilities(self) -> list[float]:
-        '''
-        Assumes is_game_over == True. Returns one utility value per player
-        (length == player_count).
 
-        Payment model: whoever holds the highest final card (value V) is the
-        loser ("gurka") and pays V to every other player. If k players tie
-        for the highest card, they share that cost evenly: each winner still
-        receives the same total V (not k*V), but each of the k tied losers
-        only pays V/k to each winner, rather than each paying the full V.
-        If every player ties (k == n, no winners), no payment occurs and
-        every utility is 0.0. This is a zero-sum transfer either way:
-        sum(get_utilities()) == 0.0 always, which is a good sanity check.
-        '''
-        final_cards = [hand[0] for hand in self.hands]
-        max_value = max(final_cards)
-        n = len(final_cards)
-
-        losers = [i for i in range(n) if final_cards[i] == max_value]
-        k = len(losers)
-        winners_count = n - k
-
-        utilities = [0.0] * n
-        if winners_count == 0:
-            # Everyone tied - no winners to pay, nothing changes hands.
-            return utilities
-
-        share_per_loser = max_value / k
-        for i in range(n):
-            if i in losers:
-                utilities[i] = -share_per_loser * winners_count
-            else:
-                utilities[i] = max_value
-
-        return utilities
-
-                
     def get_observable_state(self, viewer: int) -> ObservableState:
         hands = [
             list(hand) if i == viewer else [None] * len(hand)

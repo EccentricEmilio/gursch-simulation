@@ -3,17 +3,17 @@ from .state import ObservableState, state_from_observable
 from . import minmax
 
 class Agent:
-    def get_action(self, observable_state: ObservableState, legal_actions: list[list[int]]) -> list[int]:
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
 
 class HighestCardAgent(Agent): 
-    def get_action(self, observable_state: ObservableState, legal_actions: list[list[int]]) -> list[int]:
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         return max(legal_actions, key=lambda m: (max(m), len(m)))
 
 
 class RandomAgent(Agent):
-    def get_action(self, observable_state: ObservableState, legal_actions: list[list[int]]) -> list[int]:
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         return random.choice(legal_actions)
 
 # TODO
@@ -21,7 +21,7 @@ class MaxNAgent(Agent):
     def __init__(self, simulations: int = 100):
         self.simulations = simulations
 
-    def get_action(self, observable_state: ObservableState, legal_actions: list[list[int]]) -> list[int]:
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         obs_state = state_from_observable(observable_state)
         move_values = minmax.choose_move_maxn(obs_state, simulations=self.simulations)
 
@@ -30,7 +30,7 @@ class MaxNAgent(Agent):
 
 # TODO
 class HumanAgent(Agent):
-    def get_action(self, observable_state: ObservableState, legal_actions: list[list[int]]) -> list[int]:
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         print("Your turn!")
         print(f"Your hand: {observable_state.own_hand}")
         print("Enemy info:")

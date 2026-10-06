@@ -38,7 +38,7 @@ def test_determinize_state_invariants(trials: int = 3000) -> None:
         per_pc_trials = trials // 3
         for _ in range(per_pc_trials):
             hand_size = random.randint(2, 8)
-            state = gursh.state.State.create_new_game(player_count=player_count, hand_size=hand_size)
+            state = gursh.state.create_new_state(player_count=player_count, hand_size=hand_size)
             self_index = random.randrange(player_count)
 
             det = gursh.engine.determinize_state(state, self_index)
@@ -47,8 +47,8 @@ def test_determinize_state_invariants(trials: int = 3000) -> None:
             assert det.hands[self_index] == state.hands[self_index], (
                 "determinize_state modified self_index's own hand"
             )
-            assert det.played_cards == state.played_cards, (
-                "determinize_state modified played_cards"
+            assert det.played_moves == state.played_moves, (
+                "determinize_state modified played_moves"
             )
 
             # hand sizes preserved for every player
@@ -70,11 +70,11 @@ def test_determinize_state_invariants(trials: int = 3000) -> None:
                     )
 
             # global multiplicity: no rank used more than 4 times across
-            # every hand plus played_cards
+            # every hand plus played_moves
             all_cards = Counter()
             for hand in det.hands:
                 all_cards.update(hand)
-            all_cards.update(det.played_cards)
+            all_cards.update(det.played_moves)
             for rank, count in all_cards.items():
                 assert count <= 4, f"rank {rank} used {count} times (max 4)"
 
@@ -127,10 +127,10 @@ def test_determinize_state_distribution(
     a single borderline failure with suspicion but not alarm; treat several
     failures, or one with a very small p-value, as a real signal of bias.
     """
-    state = gursh.state.State.create_new_game(player_count=player_count, hand_size=hand_size)
+    state = gursh.state.create_new_state(player_count=player_count, hand_size=hand_size)
 
     full_deck = Counter({rank: 4 for rank in range(2, 15)})
-    known = Counter(state.hands[self_index]) + Counter(state.played_cards)
+    known = Counter(state.hands[self_index]) + Counter(state.played_moves)
     pool_counts = full_deck - known
     pool_size = sum(pool_counts.values())
     target_hand_size = len(state.hands[target_index])
