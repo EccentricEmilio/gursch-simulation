@@ -159,15 +159,14 @@ def get_utilities(state: State):
     '''
 
     n = len(state.hands)
-    # [(2, [9, 9]), (3, [10, 11]), (0, [2, 7]), (1, [11, 6])]
+    # [(2, (9, 9)), (3, (10, 11)), (0, (2, 7)), (1, (11, 6))]
     assigned_moves = [ 
         ((state.current_player - (n - 1 - i)) % n, move)
         for i, move in enumerate(state.played_moves[-n:])
     ]
-    # [(0, [2, 7]), (1, [11, 6]), (2, [9, 9]), (3, [10, 11])]
+    # [(0, (2, 7)), (1, (11, 6)), (2, (9, 9)), (3, (10, 11))]
     sorted_moves = sorted(assigned_moves, key = lambda x: x[0])
     # [9, 17, 18, 21]
-    
     move_values = [sum(m[1]) for m in sorted_moves]
     max_value = max(move_values)
 
