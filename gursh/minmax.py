@@ -22,7 +22,7 @@ def maxn(state: State) -> list[float]:
     player = state.current_player
     best_vector = None
 
-    for action in engine.get_legal_actions(state):
+    for action in engine.get_legal_moves(state):
         child_state = engine.apply_action(state, action)
         vector = maxn(child_state)
         if best_vector is None or vector[player] > best_vector[player]:
@@ -32,14 +32,15 @@ def maxn(state: State) -> list[float]:
     return best_vector
 
 
-def choose_move_maxn(state: State, simulations: int = 100) -> dict[int, float]:
+def choose_move_maxn(state: State, simulations: int = 100) -> dict[list[int], float]:
     '''
     Determinized maxn move evaluation, from the perspective of whichever
     player is actually on the clock (state.current_player) - no hardcoded
     player index anywhere in this path.
     '''
     self_index = state.current_player
-    legal_actions = engine.get_legal_actions(state)
+    legal_actions = engine.get_legal_moves(state)
+    #TODO lists are not hashable (action)
     values = {action: [] for action in legal_actions}
 
     for _ in range(simulations):
@@ -52,13 +53,3 @@ def choose_move_maxn(state: State, simulations: int = 100) -> dict[int, float]:
             values[action].append(vector[self_index])
 
     return {action: mean(vals) for action, vals in values.items()}
-
-
-def test_choose_move_maxn(player_count: int = 3, hand_size: int = 4, simulations: int = 100):
-    state = create_new_state(player_count=player_count, hand_size=hand_size)
-    print(state)
-    print(f"Acting player: {state.current_player}")
-    values = choose_move_maxn(state, simulations=simulations)
-    print(f"Values (from acting player's perspective): {values}")
-    best_move = max(values, key=lambda k: values[k])
-    print(f"Best move: {best_move}")

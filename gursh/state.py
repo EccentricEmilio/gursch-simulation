@@ -155,7 +155,7 @@ class State:
         return obs_state
 
 
-def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3):
+def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3, played_moves = []):
     deck = list(range(2, 15)) * 4
     shuffle(deck)
 
@@ -178,7 +178,7 @@ def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3
         move_length=-1,
         round_leader=-1,
         played_this_round=0,
-        played_moves=[],
+        played_moves=played_moves,
     )
 
 

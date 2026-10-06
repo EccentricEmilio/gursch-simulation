@@ -106,7 +106,7 @@ def determinize_state(state: State, self_index: int, max_attempts: int = 500) ->
     other_indices = [i for i in range(len(state.hands)) if i != self_index]
 
     full_deck = Counter({rank: 4 for rank in range(2, 15)})
-    known = Counter(state.hands[self_index]) + Counter(state.played_cards)
+    known = Counter(state.hands[self_index]) + Counter([v for move in state.played_moves for v in move])
     pool_counts = full_deck - known  # Counter subtraction drops non-positive counts
     base_pool = list(pool_counts.elements())
 
@@ -144,10 +144,9 @@ def determinize_state(state: State, self_index: int, max_attempts: int = 500) ->
         "backtracking / Hall's-theorem-based) assignment strategy."
     )
 
-def get_utilities(state: State) -> list[float]:
+def get_utilities(state: State):
     '''
     Assumes is_game_over == True. Returns one utility value per player
-    (length == player_count).
 
     Payment model: whoever holds the highest final card (value V) is the
     loser ("gurka") and pays V to every other player. If k players tie
@@ -159,30 +158,21 @@ def get_utilities(state: State) -> list[float]:
     sum(get_utilities()) == 0.0 always, which is a good sanity check.
     '''
 
+    n = len(state.hands)
+    # [(2, [9, 9]), (3, [10, 11]), (0, [2, 7]), (1, [11, 6])]
+    assigned_moves = [ 
+        ((state.current_player - (n - 1 - i)) % n, move)
+        for i, move in enumerate(state.played_moves[-n:])
+    ]
+    # [(0, [2, 7]), (1, [11, 6]), (2, [9, 9]), (3, [10, 11])]
+    sorted_moves = sorted(assigned_moves, key = lambda x: x[0])
+    # [9, 17, 18, 21]
+    print(sorted_moves)
     
-    '''
-    TODO:
-    I need to reconstruct the played moves from self.played_moves and map them to the players.
-    
-    '''
-    index_list = list(range(len(state.hands)))
+    move_values = [sum(m[1]) for m in sorted_moves]
+    max_value = max(move_values)
 
-    last_round_index = index_list[state.current_player+1:] + index_list[:state.current_player+1]
-    players_last_move = state.played_moves[len(state.hands):]
-    for indx in last_round_index:
-
-    # state.current_player is the last player of the round
-    # state.current_player +1 is the first player 
-
-
-
-
-
-    final_cards = [hand[0] for hand in state.hands]
-    max_value = max(final_cards)
-    n = len(final_cards)
-
-    losers = [i for i in range(n) if final_cards[i] == max_value]
+    losers = [i for i in range(n) if move_values[i] == max_value]
     k = len(losers)
     winners_count = n - k
 

@@ -21,4 +21,5 @@ def test_state_copy():
     state_2.highest_value = 99
     assert state_1.highest_value != 99, error_msg
 
-test_state_copy()
+if __name__ == "__main__":
+    test_state_copy()
