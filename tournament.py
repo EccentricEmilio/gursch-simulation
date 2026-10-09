@@ -1,14 +1,16 @@
 import gursh as gu
 
 
-def run_tournament(silent: bool = True):
+def run_tournament(silent: bool = True, hands = None, hand_size: int = 5):
     agents: list[gu.agents.Agent] = [
-        gu.agents.RandomAgent(), 
         gu.agents.MaxNAgent(), 
-        gu.agents.HighestCardAgent(), 
+        gu.agents.MaxNAgent(), 
+        gu.agents.MaxNAgent(),
     ]
 
-    state = gu.state.create_new_state(player_count=len(agents), hand_size=4)
+    state = gu.state.create_new_state(player_count=len(agents), hand_size=hand_size)
+    if hands is not None:
+        state.hands = hands
 
     if not silent:
         print(state)
@@ -36,10 +38,12 @@ def run_tournament(silent: bool = True):
 def run_multiple_tournaments(num_tournaments: int = 10):
     results = []
     for i in range(num_tournaments):
-        print(f"Runnings tournament {i+1}/{num_tournaments}")
-        results.append(run_tournament(silent=False))
+        print(f"Running tournament {i+1}/{num_tournaments}")
+        results.append(run_tournament(silent=True))
     mean_result = [sum(x) / len(x) for x in zip(*results)]
     print(f"Mean result over {num_tournaments} tournaments: {mean_result}")
     return results, mean_result
 
-run_multiple_tournaments(num_tournaments=10)
+#run_multiple_tournaments(num_tournaments=100)
+hands = [[7, 3, 8, 3], [7, 2, 4, 2], [7, 5, 12, 6]]
+run_tournament(silent=False, hands=hands, hand_size=4)

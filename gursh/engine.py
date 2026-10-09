@@ -17,10 +17,7 @@ def get_legal_moves(state: State) -> list[tuple[int, ...]]:
     else:
         # Response
         # Both the lowest, and all possible moves that are higher than the current highest value are legal
-        # Lowest
-        lowest_move = tuple(sorted(player_hand)[:state.move_length])
-        moves.append(lowest_move)
-
+        
         # Above or matching the highest value
         above_highest = [c for c in player_hand if c >= state.highest_value]
         moves_above_highest = []
@@ -29,6 +26,13 @@ def get_legal_moves(state: State) -> list[tuple[int, ...]]:
                 if len(comb) == state.move_length and comb not in moves_above_highest:
                     moves_above_highest.append(tuple(comb))
         moves.extend(moves_above_highest)
+
+        # Lowest move
+        # Dont add the lowest move if it is already in moves_above_highest
+
+        lowest_move = tuple(sorted(player_hand)[:state.move_length])
+        if lowest_move not in moves_above_highest:
+            moves.append(lowest_move)
     return moves
 
 def apply_action(state: State, move: tuple[int, ...]) -> State:

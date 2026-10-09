@@ -12,7 +12,7 @@ def test_get_legal_moves_lead():
     legal_moves = gu_engine.get_legal_moves(state)
     print("Hand: ", state.hands[state.current_player])
     print("Legal moves for lead:", legal_moves)
-    assert all(isinstance(move, list) for move in legal_moves), "All moves should be lists"
+    assert all(isinstance(move, tuple) for move in legal_moves), "All moves should be tuples"
     assert all(len(move) > 0 for move in legal_moves), "All moves should have at least one card"
     assert all(all(isinstance(card, int) for card in move) for move in legal_moves), "All cards should be integers"
 
@@ -32,7 +32,7 @@ def test_get_legal_moves_response():
     print("Hand: ", state.hands[state.current_player])
     print("Lead Move: ", state.played_moves[0])
     print(f"Legal moves for response, player {state.current_player}:", legal_moves)
-    assert all(isinstance(move, list) for move in legal_moves), "All moves should be lists"
+    assert all(isinstance(move, tuple) for move in legal_moves), "All moves should be tuples"
     assert all(len(move) > 0 for move in legal_moves), "All moves should have at least one card"
     assert all(all(isinstance(card, int) for card in move) for move in legal_moves), "All cards should be integers"
 
