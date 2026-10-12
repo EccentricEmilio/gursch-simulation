@@ -1,1 +1,4 @@
-Adapt engine to new ruleset
+Add special rule for 7:s
+Add depth-limited minmax with heuristic function
+Add SO-ISMCTS (single-observer information-set MCTS)
+Add mixed bot that uses SO-ISMCTS for large hands and then switches to minmax at the end.

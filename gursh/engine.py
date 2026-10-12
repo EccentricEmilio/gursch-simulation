@@ -53,7 +53,7 @@ def apply_action(state: State, move: tuple[int, ...]) -> State:
         # Lead move, update move_length
         next_state.move_length = len(move)
     
-    if all([(c > next_state.highest_value) for c in move]):
+    if all([(c >= next_state.highest_value) for c in move]):
         # Response over highest value, or leading the round
         # Update highest_value and assign new eventual winner
         next_state.highest_value = max(move)
@@ -66,7 +66,7 @@ def apply_action(state: State, move: tuple[int, ...]) -> State:
     next_state.played_this_round += 1
 
     if next_state.played_this_round == len(next_state.hands):
-        if state.is_game_over():
+        if next_state.is_game_over():
             # If game is over
             # Dont change current_player so that get_utilites knows the round order
             return next_state
