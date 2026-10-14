@@ -1,11 +1,10 @@
 import gursh as gu
 
 
-def run_tournament(silent: bool = True, hands = None, hand_size: int = 5):
+def run_tournament(silent: bool = True, hands = None, hand_size: int = 4):
     agents: list[gu.agents.Agent] = [
         gu.agents.MaxNAgent(), 
-        gu.agents.MaxNAgent(), 
-        gu.agents.MaxNAgent(),
+        gu.agents.MCTSAgent(c=0.7, iterations=1000),
     ]
 
     state = gu.state.create_new_state(player_count=len(agents), hand_size=hand_size)
@@ -44,6 +43,5 @@ def run_multiple_tournaments(num_tournaments: int = 10):
     print(f"Mean result over {num_tournaments} tournaments: {mean_result}")
     return results, mean_result
 
-#run_multiple_tournaments(num_tournaments=100)
-hands = [[7, 3, 8, 3], [7, 2, 4, 2], [7, 5, 12, 6]]
-run_tournament(silent=False, hands=hands, hand_size=4)
+if __name__ == "__main__":
+    run_multiple_tournaments(num_tournaments=500)

@@ -1,6 +1,7 @@
 import random 
 from .state import ObservableState, state_from_observable
 from . import minmax
+from . import mcts
 
 class Agent:
     def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
@@ -16,7 +17,7 @@ class RandomAgent(Agent):
     def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
         return random.choice(legal_actions)
 
-# TODO
+
 class MaxNAgent(Agent):
     def __init__(self, simulations: int = 100):
         self.simulations = simulations
@@ -27,6 +28,20 @@ class MaxNAgent(Agent):
 
         chosen_move = max(move_values, key=lambda k: move_values[k])
         return chosen_move
+
+
+class MCTSAgent(Agent):
+    def __init__(self, iterations: int = 1000, c: float = 0.7):
+        self.iterations = iterations
+        self.c = c
+
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
+        obs_state = state_from_observable(observable_state)
+        move_values = mcts.choose_move_mcts(obs_state, iterations=self.iterations, c=self.c)
+
+        chosen_move = max(move_values, key=lambda k: move_values[k])
+        return chosen_move
+
 
 # TODO
 class HumanAgent(Agent):

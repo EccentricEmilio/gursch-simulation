@@ -136,7 +136,7 @@ def determinize_state(state: State, self_index: int, max_attempts: int = 500) ->
                 working_pool.remove(c)
 
         if feasible:
-            new_state = deepcopy(state)
+            new_state = state.copy()
             for i in other_indices:
                 new_state.hands[i] = assignment[i]
             return new_state
