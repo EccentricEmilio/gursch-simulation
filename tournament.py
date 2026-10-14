@@ -1,10 +1,10 @@
 import gursh as gu
 
 
-def run_tournament(silent: bool = True, hands = None, hand_size: int = 4):
+def run_tournament(silent: bool = True, hands = None, hand_size: int = 7):
     agents: list[gu.agents.Agent] = [
-        gu.agents.MaxNAgent(), 
-        gu.agents.MCTSAgent(c=0.7, iterations=1000),
+        gu.agents.HighestCardAgent(),
+        gu.agents.MixedMaxNMCTS(maxN_iterations=200, mcts_iterations=2000, size_limit=4),
     ]
 
     state = gu.state.create_new_state(player_count=len(agents), hand_size=hand_size)

@@ -42,6 +42,26 @@ class MCTSAgent(Agent):
         chosen_move = max(move_values, key=lambda k: move_values[k])
         return chosen_move
 
+class MixedMaxNMCTS(Agent):
+    def __init__(self, maxN_iterations: int = 100, mcts_iterations: int = 1000, c: float = 0.7, size_limit: int = 5):
+        self.maxN_iterations = maxN_iterations
+        self.mcts_iterations = mcts_iterations
+        self.c = c
+        self.size_limit = size_limit
+
+    def get_action(self, observable_state: ObservableState, legal_actions: list[tuple[int, ...]]) -> tuple[int, ...]:
+        state = state_from_observable(observable_state)
+
+        if len(observable_state.own_hand) <= self.size_limit:
+            # Use MaxN
+            move_values = minmax.choose_move_maxn(state, simulations=self.maxN_iterations)
+            chosen_move = max(move_values, key=lambda k: move_values[k])
+        else: 
+            # Use MCTS
+            move_values = mcts.choose_move_mcts(state, iterations=self.mcts_iterations, c=self.c)
+            chosen_move = max(move_values, key=lambda k: move_values[k])
+        return chosen_move
+
 
 # TODO
 class HumanAgent(Agent):
