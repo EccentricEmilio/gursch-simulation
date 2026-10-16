@@ -1,6 +1,4 @@
-Add SO-ISMCTS (single-observer information-set MCTS)
 Add special rule for 7:s
 Add depth-limited minmax with heuristic function
-Add mixed bot that uses SO-ISMCTS for large hands and then switches to minmax at the end.
 Memoization in maxn: many move orders reach identical states, so a transposition table keyed on (sorted hands, hand_info, highest_value, ...) can cut work a lot.
 Fewer determinizations: your simulations=100 multiplies the whole cost. Dropping it to 10-20 gives a 5-10x speedup, with noisier values.

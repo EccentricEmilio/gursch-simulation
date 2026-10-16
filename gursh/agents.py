@@ -42,6 +42,7 @@ class MCTSAgent(Agent):
         chosen_move = max(move_values, key=lambda k: move_values[k])
         return chosen_move
 
+
 class MixedMaxNMCTS(Agent):
     def __init__(self, maxN_iterations: int = 100, mcts_iterations: int = 1000, c: float = 0.7, size_limit: int = 5):
         self.maxN_iterations = maxN_iterations
