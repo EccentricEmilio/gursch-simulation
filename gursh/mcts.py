@@ -2,6 +2,7 @@ import math
 import random
 from . import engine
 from .state import State
+from . import agents
 
 
 class Node:
@@ -27,8 +28,8 @@ def get_rollout_move(legal_moves: list[tuple[int, ...]]) -> tuple[int, ...]:
     # Rollout policy: pick a random legal move. This is the default for SO-ISMCTS.
     # This could be replaced with a more sophisticated rollout policy, e.g. one that prefers higher cards or longer runs, but that would bias the search and might not be optimal for all players.
     # Could be improved by using a heuristic to choose a move, e.g. highest card, longest run, etc.
-    return random.choice(legal_moves)
-
+    agent = agents.HighestCardAgent()
+    return agent.get_action(None, legal_moves)  # type: ignore
 
 
 
