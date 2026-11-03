@@ -27,7 +27,6 @@ class ObservableState:
     move_length: int # length of the lead_move that have been played this round
     round_leader: int # Eventual round winner
 
-    played_this_round: int # amount of cards that has been played this round
     played_moves: list[tuple[int, ...]] # moves that have been played
 
     @property
@@ -58,7 +57,6 @@ class State:
     hand_info: list[set]
     current_player: int # index of hands
 
-    played_this_round: int = 0 # amount of moves that has been played this round
     played_moves: list[tuple[int, ...]] = field(default_factory=list)  # moves that have been played
 
     highest_value: int = -1 # value to match
@@ -70,7 +68,6 @@ class State:
             hands=[hand[:] for hand in self.hands],
             hand_info=[info.copy() for info in self.hand_info],
             current_player=self.current_player,
-            played_this_round=self.played_this_round,
             played_moves=self.played_moves[:],
             highest_value=self.highest_value,
             move_length=self.move_length,
@@ -83,7 +80,6 @@ class State:
             f"current_player={self.current_player}\n"
             f"highest_value={self.highest_value}\n"
             f"round_leader={self.round_leader}\n"
-            f"played_this_round={self.played_this_round}\n"
             f"played_moves={self.played_moves}\n"
             f"move_length={self.move_length}\n"
             f"hand_info={self.hand_info}"
@@ -112,7 +108,6 @@ class State:
             highest_value=self.highest_value,
             move_length=self.move_length,
             round_leader=self.round_leader,
-            played_this_round=self.played_this_round,
             played_moves=self.played_moves
         )
 
@@ -141,7 +136,6 @@ def create_new_state(hands: list = [], player_count: int = 2, hand_size: int = 3
         highest_value=-1,
         move_length=-1,
         round_leader=-1,
-        played_this_round=0,
         played_moves=played_moves,
     )
 
@@ -167,7 +161,6 @@ def state_from_observable(obs: "ObservableState") -> "State":
         hands=hands,
         hand_info=[set(s) for s in obs.hand_info],
         current_player=obs.current_player,
-        played_this_round=obs.played_this_round,
         played_moves=list(obs.played_moves),
         highest_value=obs.highest_value,
         round_leader=obs.round_leader,

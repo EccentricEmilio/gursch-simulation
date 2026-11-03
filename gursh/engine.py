@@ -8,7 +8,8 @@ from .state import State
 def get_legal_moves(state: State) -> list[tuple[int, ...]]:
     moves: list[tuple[int, ...]] = []
     player_hand = state.hands[state.current_player] 
-    if state.played_this_round == 0:
+
+    if len(state.played_moves) % len(state.hands) == 0:
         # Lead
         counts = Counter(player_hand)
         for rank in sorted(counts):
@@ -42,17 +43,24 @@ def apply_action(state: State, move: tuple[int, ...]) -> State:
     Update .hand_info for current_player if necessary
     Update .played_moves
     Update .move_length if necessary
-    Increment .current_player and .played_this_round
+    Increment .current_player
     '''
     next_state = state.copy()
+
+    is_lead_move = (len(next_state.played_moves) % len(next_state.hands) == 0)
+    is_last_move = (len(next_state.played_moves) % len(next_state.hands) == len(next_state.hands)-1)
+
+    # If Lead move, update .move_length
+    if is_lead_move:
+        next_state.move_length = len(move)
+
+    # Update .hands
     for c in move:
         next_state.hands[next_state.current_player].remove(c)
+
+    # Update .played_moves
     next_state.played_moves.append(move)
 
-    if next_state.played_this_round == 0:
-        # Lead move, update move_length
-        next_state.move_length = len(move)
-    
     if all([(c >= next_state.highest_value) for c in move]):
         # Response over highest value, or leading the round
         # Update highest_value and assign new eventual winner
@@ -63,9 +71,8 @@ def apply_action(state: State, move: tuple[int, ...]) -> State:
         # max(move) == lowest card left in hand
         next_state.hand_info[next_state.current_player] = set(range(max(move), 15))
 
-    next_state.played_this_round += 1
-
-    if next_state.played_this_round == len(next_state.hands):
+    # Reset game
+    if is_last_move:
         if next_state.is_game_over():
             # If game is over
             # Dont change current_player so that get_utilites knows the round order
@@ -74,13 +81,11 @@ def apply_action(state: State, move: tuple[int, ...]) -> State:
         # Last player has played
         # The person which played the highest value this round
         # shall be the new .current_player
-
         next_state.current_player = next_state.round_leader
 
         # Reset game for new round
         next_state.highest_value = -1
         next_state.round_leader = -1
-        next_state.played_this_round = 0
     else:
         # Another player shall play
         # Increment .current_player
